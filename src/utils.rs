@@ -21,6 +21,8 @@ pub fn print() -> String {
 
 /// Fetches information and replaces strings from `cfg`.
 fn fetch(sys: System, cfg: &str) -> String {
+    let mut cfg = cfg.to_owned();
+    parse_commands(&mut cfg);
     let mut cfg = cfg.replace(
         "[host]",
         &sys.host_name()
@@ -43,12 +45,45 @@ fn fetch(sys: System, cfg: &str) -> String {
     cfg = cfg.replace("[username]", &execute("whoami"));
     cfg = cfg.replace(
         "[shell]",
-        &execute("echo $SHELL")
+        execute("echo $SHELL")
             .split('/')
             .last()
             .expect("[ERROR] Failed retrieving the current shell!"),
     );
-    cfg.to_owned()
+    cfg
+}
+
+/// Parses the commands from the config file.
+fn parse_commands(cfg: &mut String) {
+    const CMD: &str = "$cmd=";
+    if !cfg.contains(CMD) {
+        return;
+    }
+
+    let mut final_cfg = cfg.clone();
+    for line in cfg.lines() {
+        if !line.contains(CMD) {
+            continue;
+        }
+
+        let command = parse_command(line);
+        if command.is_empty() {
+            panic!("[ERROR] Command on line '{line}' is empty, please specify one!")
+        }
+
+        final_cfg = final_cfg.replace(&format!("{CMD}{command}"), &execute(&command))
+    }
+
+    *cfg = final_cfg;
+}
+
+/// Parses the command. For example: `$cmd=uname -a`
+pub fn parse_command(line: &str) -> String {
+    let split = line
+        .split("$cmd=")
+        .nth(1)
+        .expect("[ERROR] Failed parsing command!");
+    split.to_owned()
 }
 
 /// Executes a command and returns the output.
