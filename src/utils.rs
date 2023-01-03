@@ -1,10 +1,8 @@
-use std::{fs::read_to_string, path::Path};
-use sysinfo::{System, SystemExt};
+use crate::info;
+use std::{fs::read_to_string, path::Path, process::Command};
 
 /// Initializes the config, fetches and prints the result.
 pub fn print() -> String {
-    let mut sys = System::new_all();
-    sys.refresh_all();
     let cfg = format!("/home/{}/.config/JustFetch/config", execute("whoami"));
     let path = Path::new(&cfg);
 
@@ -12,44 +10,20 @@ pub fn print() -> String {
     if !path.exists() {
         panic!("[ERROR] Missing config at '{cfg}', please create one!")
     } else {
-        fetch(
-            sys,
-            &read_to_string(cfg).expect("[ERROR] Failed reading config!"),
-        )
+        fetch(&read_to_string(cfg).expect("[ERROR] Failed reading config!"))
     }
 }
 
 /// Fetches information and replaces strings from `cfg`.
-fn fetch(sys: System, cfg: &str) -> String {
+fn fetch(cfg: &str) -> String {
     let mut cfg = cfg.to_owned();
     parse_commands(&mut cfg);
-    let mut cfg = cfg.replace(
-        "[host]",
-        &sys.host_name()
-            .expect("[ERROR] Failed retrieving host name!"),
-    );
-    cfg = cfg.replace(
-        "[os_version]",
-        &sys.os_version()
-            .expect("[ERROR] Failed retrieving os version!"),
-    );
-    cfg = cfg.replace(
-        "[kernel]",
-        &sys.kernel_version()
-            .expect("[ERROR] Failed retrieving kernel version!"),
-    );
-    cfg = cfg.replace(
-        "[name]",
-        &sys.name().expect("[ERROR] Failed retrieving system name!"),
-    );
-    cfg = cfg.replace("[username]", &execute("whoami"));
-    cfg = cfg.replace(
-        "[shell]",
-        execute("echo $SHELL")
-            .split('/')
-            .last()
-            .expect("[ERROR] Failed retrieving the current shell!"),
-    );
+    let system_info =
+        info::get_system_information().expect("[ERROR] Failed fetching system information!");
+    let mut cfg = cfg.replace("[host]", &system_info.hostname);
+    cfg = cfg.replace("[kernel]", &system_info.kernel);
+    cfg = cfg.replace("[username]", &system_info.username);
+    cfg = cfg.replace("[shell]", &system_info.shell);
     cfg
 }
 
@@ -87,14 +61,14 @@ pub fn parse_command(line: &str) -> String {
 }
 
 /// Executes a command and returns the output.
-fn execute(cmd: &str) -> String {
+pub fn execute(cmd: &str) -> String {
     let mut result;
     if cmd.is_empty() {
         return String::default();
     }
 
     result = String::from_utf8_lossy(
-        &std::process::Command::new("sh")
+        &Command::new("sh")
             .args(["-c", cmd])
             .output()
             .unwrap()

@@ -1,9 +1,12 @@
 [package]
 name = "just-fetch"
-version = "0.1.0"
+version = "0.1.1"
+authors = [ "varsity <varsity@duck.com>" ]
+description = "A simple minimal neofetch alternative"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-sysinfo = "0.27.1"
+[profile.release]
+panic = "abort"
+opt-level = 3
+strip = true
+lto = "fat"

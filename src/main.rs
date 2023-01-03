@@ -1,3 +1,4 @@
+mod info;
 mod utils;
 
 /// Main startup function.
