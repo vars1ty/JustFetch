@@ -1,5 +1,5 @@
 # JustFetch
-A simple minimal neofetch-like alternative, aimed at one thing: Just fetching information about your system.
+A simple minimal neofetch-like alternative, aimed at one thing: Just fetching information about your system, while being easy to configure.
 
 Nothing more, nothing less.
 
@@ -9,12 +9,20 @@ Nothing more, nothing less.
 - Support for specifying a custom shell-command to run and print out
 
 ## Constant Aliases
-`[host]` - System host name
-`[kernel]` - Currently active kernel
-`[username]` - Your username
-`[shell]` - Currently active shell
+- `[host]` - System host name
+- `[kernel]` - Currently active kernel
+- `[username]` - Your username
+- `[shell]` - Currently active shell
+- `[distro]` - Active distribution name
+- `[distro_id]` - Distribution ID, for example `arch`
+- `[distro_build_id]` - Distribution Build ID, for example `rolling`
 
 ## Custom Commands
 You may display text from external shell-commands by using `$cmd=[command]`.
 
 For example: `$cmd=uname -o` - Will display the operating system you are using.
+
+## Custom Color
+You can specify a custom output color for the whole message by passing `--red` / `--green` / `--blue` with a value from `0` to `255`, default is `255` for all 3.
+
+For example: `./just-fetch --red 0 --green 255 --blue 0`

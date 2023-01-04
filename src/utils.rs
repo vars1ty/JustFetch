@@ -23,6 +23,9 @@ fn fetch(cfg: &str) -> String {
     let mut cfg = cfg.replace("[host]", &system_info.hostname);
     cfg = cfg.replace("[kernel]", &system_info.kernel);
     cfg = cfg.replace("[username]", &system_info.username);
+    cfg = cfg.replace("[distro]", &system_info.distro_name);
+    cfg = cfg.replace("[distro_id]", &system_info.distro_id);
+    cfg = cfg.replace("[distro_build_id]", &system_info.distro_build_id);
     cfg = cfg.replace("[shell]", &system_info.shell);
     cfg
 }
