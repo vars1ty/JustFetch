@@ -38,6 +38,7 @@ pub fn get_system_information() -> Option<SystemInfo> {
     let distro_build_id = parse_key(&os_release, "BUILD_ID")?;
 
     // Bundle commands into the same execute call, reducing the time needed to process the output.
+    // tl;dr: Ugly-ish trick for extra performance.
     let bundled_command =
         utils::execute("echo \"$(whoami)|$(uname -n)|$(echo $SHELL)|$(uname -r)\"");
     let bundled_command = bundled_command.split('|').collect::<Vec<&str>>();

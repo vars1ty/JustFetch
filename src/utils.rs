@@ -1,5 +1,5 @@
 use crate::info;
-use std::{fs::read_to_string, path::Path, process::Command};
+use std::{collections::HashMap, fs::read_to_string, path::Path, process::Command};
 
 /// Initializes the config, fetches and prints the result.
 pub fn print() -> String {
@@ -18,6 +18,11 @@ pub fn print() -> String {
 fn fetch(cfg: &str) -> String {
     let mut cfg = cfg.to_owned();
     parse_commands(&mut cfg);
+    if !cfg.contains('[') && !cfg.contains(']') {
+        // No alias characters found, spare some resources by not fetching system information.
+        return cfg;
+    }
+
     let system_info =
         info::get_system_information().expect("[ERROR] Failed fetching system information!");
     let mut cfg = cfg.replace("[host]", &system_info.hostname);
@@ -38,6 +43,7 @@ fn parse_commands(cfg: &mut String) {
     }
 
     let mut final_cfg = cfg.clone();
+    let mut command_cache: HashMap<String, String> = HashMap::new();
     for line in cfg.lines() {
         if !line.contains(CMD) {
             continue;
@@ -48,7 +54,18 @@ fn parse_commands(cfg: &mut String) {
             panic!("[ERROR] Command on line '{line}' is empty, please specify one!")
         }
 
-        final_cfg = final_cfg.replace(&format!("{CMD}{command}"), &execute(&command))
+        let raw_command = &format!("{CMD}{command}");
+        let output = if command_cache.contains_key(raw_command) {
+            // Found in cache, return it.
+            command_cache.get(raw_command).unwrap().to_owned()
+        } else {
+            // Not found, cache it so we can reuse the result if needed.
+            let res = execute(&command);
+            command_cache.insert(raw_command.to_owned(), res.to_owned());
+            res
+        };
+
+        final_cfg = final_cfg.replace(raw_command, &output)
     }
 
     *cfg = final_cfg;

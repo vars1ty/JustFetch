@@ -8,6 +8,8 @@ Nothing more, nothing less.
 - Simple config;
 - Support for specifying a custom shell-command to run and print out
 
+Oh and it's fast and small, probably faster than most other fetching programs out there.
+
 ## Constant Aliases
 - `[host]` - System host name
 - `[kernel]` - Currently active kernel
