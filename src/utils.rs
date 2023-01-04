@@ -55,20 +55,32 @@ fn parse_commands(cfg: &mut String) {
         }
 
         let raw_command = &format!("{CMD}{command}");
-        let output = if command_cache.contains_key(raw_command) {
-            // Found in cache, return it.
-            command_cache.get(raw_command).unwrap().to_owned()
-        } else {
-            // Not found, cache it so we can reuse the result if needed.
-            let res = execute(&command);
-            command_cache.insert(raw_command.to_owned(), res.to_owned());
-            res
-        };
-
-        final_cfg = final_cfg.replace(raw_command, &output)
+        final_cfg = final_cfg.replace(
+            raw_command,
+            &get_from_cache(&mut command_cache, raw_command, &command),
+        )
     }
 
     *cfg = final_cfg;
+}
+
+/// Gets a command from the `cache` if present. Otherwise it's added and then returned.
+fn get_from_cache(
+    cache: &mut HashMap<String, String>,
+    raw_command: &String,
+    command: &str,
+) -> String {
+    let output = if cache.contains_key(raw_command) {
+        // Found in cache, return it.
+        cache.get(raw_command).unwrap().to_owned()
+    } else {
+        // Not found, cache it so we can reuse the result if needed.
+        let res = execute(&command);
+        cache.insert(raw_command.to_owned(), res.to_owned());
+        res
+    };
+
+    output
 }
 
 /// Parses the command. For example: `$cmd=uname -a`
