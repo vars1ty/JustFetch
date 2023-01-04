@@ -39,9 +39,7 @@ pub fn get_system_information() -> Option<SystemInfo> {
 
     // Bundle commands into the same execute call, reducing the time needed to process the output.
     // tl;dr: Ugly-ish trick for extra performance.
-    let bundled_command =
-        utils::execute("echo \"$(whoami)|$(uname -n)|$(echo $SHELL)|$(uname -r)\"");
-    let bundled_command = bundled_command.split('|').collect::<Vec<&str>>();
+    let bundled_command = utils::execute_batched("whoami, uname -n, echo $SHELL, uname -r");
     // Ensure the bundled command consists of 4 entries.
     if bundled_command.len() != 4 {
         panic!("[ERROR] bundled_command isn't consisting of 4 entries. Output: {bundled_command:?}")

@@ -113,3 +113,24 @@ pub fn execute(cmd: &str) -> String {
 
     result
 }
+
+/// Executes several commands at once, split by `, ` between each command.
+/// For example: let result = execute_batched("whoami, uname -a");
+/// Retrieving the value of `whoami`: let whoami = result[0];
+pub fn execute_batched(cmds: &str) -> Vec<String> {
+    let mut formatted = String::new();
+    for split in cmds.split(", ") {
+        formatted.push_str(&format!("$({split})|"))
+    }
+
+    if formatted.ends_with('|') {
+        // Remove the last character from `formatted` (aka '|').
+        formatted.pop();
+    }
+
+    let executed = execute(&format!("echo \"{formatted}\""));
+    executed
+        .split('|')
+        .map(|entry| entry.to_owned())
+        .collect::<Vec<String>>()
+}
