@@ -36,10 +36,20 @@ pub fn get_system_information() -> Option<SystemInfo> {
     let distro_name = parse_key(&os_release, "NAME")?;
     let distro_id = parse_key(&os_release, "ID")?;
     let distro_build_id = parse_key(&os_release, "BUILD_ID")?;
-    let username = utils::execute("whoami");
-    let hostname = utils::execute("uname -n");
-    let shell = utils::execute("echo $SHELL").split('/').last()?.to_owned();
-    let kernel = utils::execute("uname -r");
+
+    // Bundle commands into the same execute call, reducing the time needed to process the output.
+    let bundled_command =
+        utils::execute("echo \"$(whoami)|$(uname -n)|$(echo $SHELL)|$(uname -r)\"");
+    let bundled_command = bundled_command.split('|').collect::<Vec<&str>>();
+    // Ensure the bundled command consists of 4 entries.
+    if bundled_command.len() != 4 {
+        panic!("[ERROR] bundled_command isn't consisting of 4 entries. Output: {bundled_command:?}")
+    }
+
+    let username = bundled_command[0].to_owned();
+    let hostname = bundled_command[1].to_owned();
+    let shell = bundled_command[2].split('/').last()?.to_owned();
+    let kernel = bundled_command[3].to_owned();
     Some(SystemInfo {
         distro_name,
         distro_id,
