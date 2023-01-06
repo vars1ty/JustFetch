@@ -6,9 +6,10 @@ description = "A simple minimal neofetch alternative"
 edition = "2021"
 
 [dependencies]
-arguments = "0.7.1"
-ansi_rgb = "0.2.0"
-rgb = "0.8.34"
+arguments = "*"
+ansi_rgb = "*"
+libc = "*"
+rgb = "*"
 
 [profile.release]
 panic = "abort"

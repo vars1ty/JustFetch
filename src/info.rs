@@ -1,5 +1,5 @@
 use crate::utils;
-use std::fs::read_to_string;
+use std::{ffi::CStr, fs::read_to_string};
 
 /// Fetched system information.
 #[derive(Debug)]
@@ -11,6 +11,7 @@ pub struct SystemInfo {
     pub hostname: String,
     pub shell: String,
     pub kernel: String,
+    pub uptime: String,
 }
 
 /// Parses the given key as a `String`.
@@ -29,6 +30,18 @@ pub fn parse_key(os_release: &str, key: &str) -> Option<String> {
     Some(split)
 }
 
+/// Returns the active host username.
+fn get_username() -> String {
+    let username;
+    unsafe {
+        username = CStr::from_ptr(libc::getlogin())
+            .to_str()
+            .expect("[ERROR] Failed retrieving username!");
+    }
+
+    username.to_owned()
+}
+
 /// Fetches system information.
 pub fn get_system_information() -> Option<SystemInfo> {
     let os_release =
@@ -39,16 +52,25 @@ pub fn get_system_information() -> Option<SystemInfo> {
 
     // Bundle commands into the same execute call, reducing the time needed to process the output.
     // tl;dr: Ugly-ish trick for extra performance.
-    let bundled_command = utils::execute_batched("whoami, uname -n, echo $SHELL, uname -r");
+    let bundled_command = utils::execute_batched("uname -n, echo $SHELL, uname -r, uptime -p");
     // Ensure the bundled command consists of 4 entries.
     if bundled_command.len() != 4 {
         panic!("[ERROR] bundled_command isn't consisting of 4 entries. Output: {bundled_command:?}")
     }
 
-    let username = bundled_command[0].to_owned();
-    let hostname = bundled_command[1].to_owned();
-    let shell = bundled_command[2].split('/').last()?.to_owned();
-    let kernel = bundled_command[3].to_owned();
+    let username = get_username();
+    let hostname = bundled_command[0].to_owned();
+    let shell = bundled_command[1].split('/').last()?.to_owned();
+    let kernel = bundled_command[2].to_owned();
+    let mut uptime = bundled_command[3].to_owned();
+    let uptime_start = bundled_command[3]
+        .to_owned()
+        .split_whitespace()
+        .next()
+        .expect("[ERROR] Failed splitting by whitespace on uptime_start!")
+        .to_owned();
+    uptime = uptime.replace(&format!("{uptime_start} "), "");
+
     Some(SystemInfo {
         distro_name,
         distro_id,
@@ -57,5 +79,6 @@ pub fn get_system_information() -> Option<SystemInfo> {
         hostname,
         shell,
         kernel,
+        uptime,
     })
 }

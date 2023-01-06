@@ -1,17 +1,18 @@
 use crate::info;
-use std::{collections::HashMap, fs::read_to_string, path::Path, process::Command};
+use std::{collections::HashMap, fs::read_to_string, process::Command};
 
 /// Initializes the config, fetches and prints the result.
 pub fn print() -> String {
     let cfg = format!("/home/{}/.config/JustFetch/config", execute("whoami"));
-    let path = Path::new(&cfg);
-
-    // Create/Load config.
-    if !path.exists() {
-        panic!("[ERROR] Missing config at '{cfg}', please create one!")
-    } else {
-        fetch(&read_to_string(cfg).expect("[ERROR] Failed reading config!"))
-    }
+    fetch(
+        &read_to_string(cfg).unwrap_or(
+            r#"Distro: [distro]
+Kernel: [kernel]
+Username: [username]
+Create your own config at ~/.config/JustFetch/config"#
+                .to_owned(),
+        ),
+    )
 }
 
 /// Fetches information and replaces strings from `cfg`.
@@ -32,6 +33,7 @@ fn fetch(cfg: &str) -> String {
     cfg = cfg.replace("[distro_id]", &system_info.distro_id);
     cfg = cfg.replace("[distro_build_id]", &system_info.distro_build_id);
     cfg = cfg.replace("[shell]", &system_info.shell);
+    cfg = cfg.replace("[uptime]", &system_info.uptime);
     cfg
 }
 
