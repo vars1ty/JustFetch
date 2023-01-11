@@ -1,5 +1,12 @@
+use libc::{c_char, sysconf, _SC_HOST_NAME_MAX};
+
 use crate::utils;
-use std::{ffi::CStr, fs::read_to_string};
+use std::{
+    ffi::{CStr, OsString},
+    fs::read_to_string,
+    mem::MaybeUninit,
+    os::unix::prelude::OsStringExt,
+};
 
 /// Fetched system information.
 #[derive(Debug)]
@@ -42,6 +49,37 @@ fn get_username() -> String {
     username.to_owned()
 }
 
+/// Returns the active hostname.
+fn get_hostname() -> String {
+    // Thanks to swsnr/gethostname.rs
+    let hostname_max = unsafe { sysconf(_SC_HOST_NAME_MAX) };
+    let mut buffer = vec![0; (hostname_max as usize) + 1];
+    unsafe { libc::gethostname(buffer.as_mut_ptr() as *mut _, buffer.len()) };
+    let end = buffer
+        .iter()
+        .position(|&byte| byte == 0)
+        .unwrap_or(buffer.len());
+    buffer.resize(end, 0);
+    OsString::from_vec(buffer)
+        .to_str()
+        .expect("[ERROR] Failed getting hostname as str!")
+        .to_owned()
+}
+
+/// Returns the active kernel version.
+fn get_kernel_version() -> String {
+    let mut info = unsafe { MaybeUninit::<libc::utsname>::zeroed().assume_init() };
+    let mut result = vec![0; info.release.len()];
+    unsafe { libc::uname(&mut info as *mut _) };
+
+    // Push content into `result` as `u8`.
+    for i in info.release {
+        result.push(i as u8);
+    }
+
+    String::from_utf8(result).unwrap()
+}
+
 /// Fetches system information.
 pub fn get_system_information() -> Option<SystemInfo> {
     let os_release =
@@ -50,20 +88,12 @@ pub fn get_system_information() -> Option<SystemInfo> {
     let distro_id = parse_key(&os_release, "ID")?;
     let distro_build_id = parse_key(&os_release, "BUILD_ID")?;
 
-    // Bundle commands into the same execute call, reducing the time needed to process the output.
-    // tl;dr: Ugly-ish trick for extra performance.
-    let bundled_command = utils::execute_batched("uname -n, echo $SHELL, uname -r, uptime -p");
-    // Ensure the bundled command consists of 4 entries.
-    if bundled_command.len() != 4 {
-        panic!("[ERROR] bundled_command isn't consisting of 4 entries. Output: {bundled_command:?}")
-    }
-
     let username = get_username();
-    let hostname = bundled_command[0].to_owned();
-    let shell = bundled_command[1].split('/').last()?.to_owned();
-    let kernel = bundled_command[2].to_owned();
-    let mut uptime = bundled_command[3].to_owned();
-    let uptime_start = bundled_command[3]
+    let hostname = get_hostname();
+    let shell = env!("SHELL").split('/').last()?.to_owned();
+    let kernel = get_kernel_version();
+    let mut uptime = utils::execute("uptime -p");
+    let uptime_start = uptime
         .to_owned()
         .split_whitespace()
         .next()

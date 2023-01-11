@@ -1,6 +1,6 @@
 [package]
 name = "just-fetch"
-version = "0.1.0"
+version = "0.1.1"
 authors = [ "varsity <varsity@duck.com>" ]
 description = "A simple minimal neofetch alternative"
 edition = "2021"
@@ -12,6 +12,7 @@ libc = "*"
 rgb = "*"
 
 [profile.release]
+overflow-checks = false
 panic = "abort"
 opt-level = 3
 strip = true
