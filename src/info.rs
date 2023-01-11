@@ -68,6 +68,8 @@ fn get_by_type(r#type: Type) -> String {
     // Store the output of `uname` into `info` as long as the type isn't `Username`.
     if r#type != Type::Username {
         unsafe { libc::uname(&mut info as *mut _) };
+    } else {
+        drop(info)
     }
 
     let result;
