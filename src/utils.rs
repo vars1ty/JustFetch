@@ -15,6 +15,16 @@ Create your own config at ~/.config/JustFetch/config"#
     )
 }
 
+/// Replaces a string in `content` if found.
+fn replace_if_present(content: String, replace: &str, with: &str) -> String {
+    if !content.contains(replace) {
+        return content;
+    }
+
+    let content = content.replace(replace, with);
+    content
+}
+
 /// Fetches information and replaces strings from `cfg`.
 fn fetch(cfg: &str) -> String {
     let mut cfg = cfg.to_owned();
@@ -26,14 +36,14 @@ fn fetch(cfg: &str) -> String {
 
     let system_info =
         info::get_system_information().expect("[ERROR] Failed fetching system information!");
-    let mut cfg = cfg.replace("[host]", &system_info.hostname);
-    cfg = cfg.replace("[kernel]", &system_info.kernel);
-    cfg = cfg.replace("[username]", &system_info.username);
-    cfg = cfg.replace("[distro]", &system_info.distro_name);
-    cfg = cfg.replace("[distro_id]", &system_info.distro_id);
-    cfg = cfg.replace("[distro_build_id]", &system_info.distro_build_id);
-    cfg = cfg.replace("[shell]", &system_info.shell);
-    cfg = cfg.replace("[uptime]", &system_info.uptime);
+    let mut cfg = replace_if_present(cfg, "[host]", &system_info.hostname);
+    cfg = replace_if_present(cfg, "[kernel]", &system_info.kernel);
+    cfg = replace_if_present(cfg, "[username]", &system_info.username);
+    cfg = replace_if_present(cfg, "[distro]", &system_info.distro_name);
+    cfg = replace_if_present(cfg, "[distro_id]", &system_info.distro_id);
+    cfg = replace_if_present(cfg, "[distro_build_id]", &system_info.distro_build_id);
+    cfg = replace_if_present(cfg, "[shell]", &system_info.shell);
+    cfg = replace_if_present(cfg, "[uptime]", &system_info.uptime);
     cfg
 }
 
@@ -53,7 +63,7 @@ fn parse_commands(cfg: &mut String) {
 
         let command = parse_command(line);
         if command.is_empty() {
-            panic!("[ERROR] Command on line '{line}' is empty, please specify one!")
+            panic!("[ERROR] Command on line '{line}' is empty, please specify what to execute!")
         }
 
         let raw_command = &format!("{CMD}{command}");
@@ -114,25 +124,4 @@ pub fn execute(cmd: &str) -> String {
     result.pop();
 
     result
-}
-
-/// Executes several commands at once, split by `, ` between each command.
-/// For example: let result = execute_batched("whoami, uname -a");
-/// Retrieving the value of `whoami`: let whoami = result[0];
-pub fn execute_batched(cmds: &str) -> Vec<String> {
-    let mut formatted = String::new();
-    for split in cmds.split(", ") {
-        formatted.push_str(&format!("$({split})|"))
-    }
-
-    if formatted.ends_with('|') {
-        // Remove the last character from `formatted` (aka '|').
-        formatted.pop();
-    }
-
-    let executed = execute(&format!("echo \"{formatted}\""));
-    executed
-        .split('|')
-        .map(|entry| entry.to_owned())
-        .collect::<Vec<String>>()
 }

@@ -24,9 +24,10 @@ fn setup_args() -> Arguments {
 
 /// Gets the color specified by the user via the arguments.
 fn get_color(args: Arguments) -> RGB8 {
-    let r = args.get::<u8>("red").unwrap_or(255);
-    let g = args.get::<u8>("green").unwrap_or(255);
-    let b = args.get::<u8>("blue").unwrap_or(255);
+    const DEFAULT: u8 = 255;
+    let r = args.get::<u8>("red").unwrap_or(DEFAULT);
+    let g = args.get::<u8>("green").unwrap_or(DEFAULT);
+    let b = args.get::<u8>("blue").unwrap_or(DEFAULT);
     RGB8::new(r, g, b)
 }
 

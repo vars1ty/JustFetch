@@ -1,15 +1,17 @@
-use libc::{c_char, sysconf, _SC_HOST_NAME_MAX};
-
 use crate::utils;
-use std::{
-    ffi::{CStr, OsString},
-    fs::read_to_string,
-    mem::MaybeUninit,
-    os::unix::prelude::OsStringExt,
-};
+use std::{ffi::CStr, fs::File, io::Read, mem::MaybeUninit};
+
+/// Simple macro to convert all bytes to their u8 representation.
+macro_rules! bytes_to_u8 {
+    ($collection:expr) => {
+        $collection
+            .iter()
+            .map(|byte| *byte as u8)
+            .collect::<Vec<_>>()
+    };
+}
 
 /// Fetched system information.
-#[derive(Debug)]
 pub struct SystemInfo {
     pub distro_name: String,
     pub distro_id: String,
@@ -19,6 +21,28 @@ pub struct SystemInfo {
     pub shell: String,
     pub kernel: String,
     pub uptime: String,
+}
+
+/// Type of information to obtain.
+#[derive(PartialEq)]
+enum Type {
+    Username,
+    HostName,
+    KernelVersion,
+}
+
+/// Reads the specified file using `read_exact`.
+fn fread(path: &str) -> String {
+    let mut file = File::open(path).expect("[ERROR] Failed reading file!");
+    let length = file
+        .metadata()
+        .expect("[ERROR] Failed reading metadata of file!")
+        .len() as usize;
+    let mut buffer = Vec::new();
+    buffer.resize(length, 0);
+    file.read_exact(&mut buffer)
+        .expect("[ERROR] Failed reading file into buffer!");
+    String::from_utf8(buffer).expect("[ERROR] Failed returning buffer as a String!")
 }
 
 /// Parses the given key as a `String`.
@@ -37,61 +61,45 @@ pub fn parse_key(os_release: &str, key: &str) -> Option<String> {
     Some(split)
 }
 
-/// Returns the active host username.
-fn get_username() -> String {
-    let username;
-    unsafe {
-        username = CStr::from_ptr(libc::getlogin())
-            .to_str()
-            .expect("[ERROR] Failed retrieving username!");
-    }
-
-    username.to_owned()
-}
-
-/// Returns the active hostname.
-fn get_hostname() -> String {
-    // Thanks to swsnr/gethostname.rs
-    let hostname_max = unsafe { sysconf(_SC_HOST_NAME_MAX) };
-    let mut buffer = vec![0; (hostname_max as usize) + 1];
-    unsafe { libc::gethostname(buffer.as_mut_ptr() as *mut _, buffer.len()) };
-    let end = buffer
-        .iter()
-        .position(|&byte| byte == 0)
-        .unwrap_or(buffer.len());
-    buffer.resize(end, 0);
-    OsString::from_vec(buffer)
-        .to_str()
-        .expect("[ERROR] Failed getting hostname as str!")
-        .to_owned()
-}
-
 /// Returns the active kernel version.
-fn get_kernel_version() -> String {
+fn get_by_type(r#type: Type) -> String {
+    // Create an uninitialized instance of `utsname`.
     let mut info = unsafe { MaybeUninit::<libc::utsname>::zeroed().assume_init() };
-    let mut result = vec![0; info.release.len()];
-    unsafe { libc::uname(&mut info as *mut _) };
-
-    // Push content into `result` as `u8`.
-    for i in info.release {
-        result.push(i as u8);
+    // Store the output of `uname` into `info` as long as the type isn't `Username`.
+    if r#type != Type::Username {
+        unsafe { libc::uname(&mut info as *mut _) };
     }
 
-    String::from_utf8(result).unwrap()
+    let result;
+    match r#type {
+        Type::Username => unsafe {
+            return CStr::from_ptr(libc::getlogin())
+                .to_str()
+                .expect("[ERROR] Failed retrieving username!")
+                .to_owned();
+        },
+        Type::HostName => {
+            result = bytes_to_u8!(info.nodename);
+        }
+        Type::KernelVersion => {
+            result = bytes_to_u8!(info.release);
+        }
+    }
+
+    String::from_utf8(result).expect("[ERROR] Failed converting libc output to a String!")
 }
 
 /// Fetches system information.
 pub fn get_system_information() -> Option<SystemInfo> {
-    let os_release =
-        read_to_string("/etc/os-release").expect("[ERROR] Failed reading /etc/os-release!");
+    let os_release = fread("/etc/os-release");
     let distro_name = parse_key(&os_release, "NAME")?;
     let distro_id = parse_key(&os_release, "ID")?;
     let distro_build_id = parse_key(&os_release, "BUILD_ID")?;
 
-    let username = get_username();
-    let hostname = get_hostname();
+    let username = get_by_type(Type::Username);
+    let hostname = get_by_type(Type::HostName);
     let shell = env!("SHELL").split('/').last()?.to_owned();
-    let kernel = get_kernel_version();
+    let kernel = get_by_type(Type::KernelVersion);
     let mut uptime = utils::execute("uptime -p");
     let uptime_start = uptime
         .to_owned()
