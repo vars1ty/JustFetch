@@ -25,7 +25,7 @@ pub struct SystemInfo {
 
 /// Type of information to obtain.
 #[derive(PartialEq)]
-enum Type {
+pub enum Type {
     Username,
     HostName,
     KernelVersion,
@@ -62,13 +62,14 @@ pub fn parse_key(os_release: &str, key: &str) -> Option<String> {
 }
 
 /// Returns the active kernel version.
-fn get_by_type(r#type: Type) -> String {
+pub fn get_by_type(r#type: Type) -> String {
     // Create an uninitialized instance of `utsname`.
     let mut info = unsafe { MaybeUninit::<libc::utsname>::zeroed().assume_init() };
     // Store the output of `uname` into `info` as long as the type isn't `Username`.
     if r#type != Type::Username {
         unsafe { libc::uname(&mut info as *mut _) };
     } else {
+        // Drop `info` to free its resources asap, since it won't be used.
         drop(info)
     }
 
@@ -103,6 +104,9 @@ pub fn get_system_information() -> Option<SystemInfo> {
     let shell = env!("SHELL").split('/').last()?.to_owned();
     let kernel = get_by_type(Type::KernelVersion);
     let mut uptime = utils::execute("uptime -p");
+
+    // Get the first entry when split by a whitespace, then remove it.
+    // For example: "up 10 minutes" => "10 minutes".
     let uptime_start = uptime
         .to_owned()
         .split_whitespace()
