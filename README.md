@@ -18,6 +18,9 @@ Oh and it's fast and small, probably faster than most other fetching programs ou
 - `[distro]` - Active distribution name
 - `[distro_id]` - Distribution ID, for example `arch`
 - `[distro_build_id]` - Distribution Build ID, for example `rolling`
+- `[total_mem]` - Total amount of installed memory
+- `[cached_mem]` - Cached amount of memory
+- `[available_mem]` - Available memory
 
 ## Custom Commands
 You may display text from external shell-commands by using `$cmd=[command]`.

@@ -1,5 +1,13 @@
+use byte_unit::Byte;
+
 use crate::info;
 use std::{collections::HashMap, fs::read_to_string, process::Command};
+
+/// Converts kilobytes to gigabytes.
+pub fn kb_to_gb(number: f64) -> String {
+    let unit = Byte::from_unit(number, byte_unit::ByteUnit::KB).unwrap();
+    unit.get_adjusted_unit(byte_unit::ByteUnit::GB).to_string()
+}
 
 /// Initializes the config, fetches and prints the result.
 pub fn print() -> String {
@@ -7,7 +15,7 @@ pub fn print() -> String {
         "/home/{}/.config/JustFetch/config",
         info::get_by_type(info::Type::Username)
     );
-    let mut cfg = read_to_string(cfg).unwrap_or(
+    let mut cfg = read_to_string(&cfg).unwrap_or(
         r#"Distro: [distro]
 Kernel: [kernel]
 Username: [username]
@@ -15,17 +23,16 @@ Create your own config at ~/.config/JustFetch/config"#
             .to_owned(),
     );
 
+    // Fetch the final content into `cfg`.
     fetch(&mut cfg);
     cfg
 }
 
 /// Replaces a string in `content` if found.
 fn replace_if_present(content: &mut String, replace: &str, with: &str) {
-    if !content.contains(replace) {
-        return;
+    if content.contains(replace) {
+        *content = content.replace(replace, with);
     }
-
-    *content = content.replace(replace, with);
 }
 
 /// Fetches information and replaces strings from `cfg`.
@@ -46,6 +53,9 @@ fn fetch(cfg: &mut String) {
     replace_if_present(cfg, "[distro_build_id]", &system_info.distro_build_id);
     replace_if_present(cfg, "[shell]", &system_info.shell);
     replace_if_present(cfg, "[uptime]", &system_info.uptime);
+    replace_if_present(cfg, "[total_mem]", &system_info.total_mem);
+    replace_if_present(cfg, "[cached_mem]", &system_info.cached_mem);
+    replace_if_present(cfg, "[available_mem]", &system_info.available_mem);
 }
 
 /// Parses the commands from the config file.

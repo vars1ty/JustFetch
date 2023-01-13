@@ -1,5 +1,5 @@
 use crate::utils;
-use std::{ffi::CStr, fs::File, io::Read, mem::MaybeUninit};
+use std::{ffi::CStr, fs::read_to_string, mem::MaybeUninit};
 
 /// Simple macro to convert all bytes to their u8 representation.
 macro_rules! bytes_to_u8 {
@@ -21,6 +21,9 @@ pub struct SystemInfo {
     pub shell: String,
     pub kernel: String,
     pub uptime: String,
+    pub total_mem: String,
+    pub cached_mem: String,
+    pub available_mem: String,
 }
 
 /// Type of information to obtain.
@@ -31,22 +34,8 @@ pub enum Type {
     KernelVersion,
 }
 
-/// Reads the specified file using `read_exact`.
-fn fread(path: &str) -> String {
-    let mut file = File::open(path).expect("[ERROR] Failed reading file!");
-    let length = file
-        .metadata()
-        .expect("[ERROR] Failed reading metadata of file!")
-        .len() as usize;
-    let mut buffer = Vec::new();
-    buffer.resize(length, 0);
-    file.read_exact(&mut buffer)
-        .expect("[ERROR] Failed reading file into buffer!");
-    String::from_utf8(buffer).expect("[ERROR] Failed returning buffer as a String!")
-}
-
-/// Parses the given key as a `String`.
-pub fn parse_key(os_release: &str, key: &str) -> Option<String> {
+/// Parses the given os-release key as a `String`.
+pub fn parse_osr_key(os_release: &str, key: &str) -> Option<String> {
     let mut split = os_release.split(&format!("{key}=")).nth(1)?.to_owned();
     if split.contains('\n') {
         // Only get the first line from the result.
@@ -59,6 +48,28 @@ pub fn parse_key(os_release: &str, key: &str) -> Option<String> {
     }
 
     Some(split)
+}
+
+/// Parses the given MemInfo key as a `String`.
+pub fn parse_minf_key(meminfo: &str, key: &str) -> Option<String> {
+    for line in meminfo.lines() {
+        if !line.starts_with(key) {
+            // Doesn't have the key we are looking for.
+            continue;
+        }
+
+        // Trim to get rid of the repeated whitespaces, making parsing easier.
+        let line = line.trim();
+        return Some(line.split_whitespace().nth(1)?.to_owned());
+    }
+
+    None
+}
+
+/// Converts the value of the given MemInfo key, into the gigabytes representation.
+pub fn minf_get_gb(meminfo: &str, key: &str) -> String {
+    let parsed: f64 = parse_minf_key(meminfo, key).unwrap().parse().unwrap();
+    utils::kb_to_gb(parsed)
 }
 
 /// Returns the active kernel version.
@@ -94,10 +105,12 @@ pub fn get_by_type(r#type: Type) -> String {
 
 /// Fetches system information.
 pub fn get_system_information() -> Option<SystemInfo> {
-    let os_release = fread("/etc/os-release");
-    let distro_name = parse_key(&os_release, "NAME")?;
-    let distro_id = parse_key(&os_release, "ID")?;
-    let distro_build_id = parse_key(&os_release, "BUILD_ID")?;
+    let os_release =
+        read_to_string("/etc/os-release").expect("[ERROR] Failed reading /etc/os-release!");
+    let meminfo = read_to_string("/proc/meminfo").expect("[ERROR] Failed reading /proc/meminfo!");
+    let distro_name = parse_osr_key(&os_release, "NAME")?;
+    let distro_id = parse_osr_key(&os_release, "ID")?;
+    let distro_build_id = parse_osr_key(&os_release, "BUILD_ID")?;
 
     let username = get_by_type(Type::Username);
     let hostname = get_by_type(Type::HostName);
@@ -115,6 +128,10 @@ pub fn get_system_information() -> Option<SystemInfo> {
         .to_owned();
     uptime = uptime.replace(&format!("{uptime_start} "), "");
 
+    let total_mem = minf_get_gb(&meminfo, "MemTotal");
+    let cached_mem = minf_get_gb(&meminfo, "Cached");
+    let available_mem = minf_get_gb(&meminfo, "MemAvailable");
+
     Some(SystemInfo {
         distro_name,
         distro_id,
@@ -124,5 +141,8 @@ pub fn get_system_information() -> Option<SystemInfo> {
         shell,
         kernel,
         uptime,
+        total_mem,
+        cached_mem,
+        available_mem,
     })
 }

@@ -1,12 +1,14 @@
 [package]
 name = "just-fetch"
-version = "0.1.1"
+version = "0.1.2"
 authors = [ "varsity <varsity@duck.com>" ]
 description = "A simple minimal neofetch alternative"
 edition = "2021"
 
 [dependencies]
+pretty-bytes = "*"
 arguments = "*"
+byte-unit = "*"
 ansi_rgb = "*"
 libc = "*"
 rgb = "*"
