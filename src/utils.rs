@@ -56,6 +56,7 @@ fn fetch(cfg: &mut String) {
     replace_if_present(cfg, "[total_mem]", &system_info.total_mem);
     replace_if_present(cfg, "[cached_mem]", &system_info.cached_mem);
     replace_if_present(cfg, "[available_mem]", &system_info.available_mem);
+    replace_if_present(cfg, "[used_mem]", &system_info.used_mem);
 }
 
 /// Parses the commands from the config file.

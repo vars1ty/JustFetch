@@ -21,6 +21,7 @@ Oh and it's fast and small, probably faster than most other fetching programs ou
 - `[total_mem]` - Total amount of installed memory
 - `[cached_mem]` - Cached amount of memory
 - `[available_mem]` - Available memory
+- `[used_mem]` - Used memory
 
 ## Custom Commands
 You may display text from external shell-commands by using `$cmd=[command]`.

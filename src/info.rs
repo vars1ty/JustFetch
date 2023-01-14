@@ -24,6 +24,7 @@ pub struct SystemInfo {
     pub total_mem: String,
     pub cached_mem: String,
     pub available_mem: String,
+    pub used_mem: String,
 }
 
 /// Type of information to obtain.
@@ -132,6 +133,16 @@ pub fn get_system_information() -> Option<SystemInfo> {
     let cached_mem = minf_get_gb(&meminfo, "Cached");
     let available_mem = minf_get_gb(&meminfo, "MemAvailable");
 
+    let total_kb: f64 = parse_minf_key(&meminfo, "MemTotal")
+        .unwrap()
+        .parse()
+        .unwrap();
+    let free_kb: f64 = parse_minf_key(&meminfo, "MemAvailable")
+        .unwrap()
+        .parse()
+        .unwrap();
+    let used_mem = utils::kb_to_gb(total_kb - free_kb);
+
     Some(SystemInfo {
         distro_name,
         distro_id,
@@ -144,5 +155,6 @@ pub fn get_system_information() -> Option<SystemInfo> {
         total_mem,
         cached_mem,
         available_mem,
+        used_mem,
     })
 }
