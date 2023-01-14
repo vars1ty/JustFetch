@@ -6,7 +6,6 @@ description = "A simple minimal neofetch alternative"
 edition = "2021"
 
 [dependencies]
-pretty-bytes = "*"
 arguments = "*"
 byte-unit = "*"
 ansi_rgb = "*"
