@@ -123,7 +123,10 @@ fn get_uptime() -> String {
     // Pretty-format it before returning
     if days > 0 {
         result.push_str(&days.to_string());
-        result.push_str(if days > 1 { " days" } else { " day" })
+        result.push_str(if days > 1 { " days" } else { " day" });
+        if hours > 0 {
+            result.push(',')
+        }
     }
 
     if hours > 0 {
@@ -133,12 +136,14 @@ fn get_uptime() -> String {
 
         result.push_str(&hours.to_string());
         result.push_str(if hours > 1 { " hours" } else { " hour" });
-        result.push(',');
+        if minutes > 0 {
+            result.push(',')
+        }
     }
 
     if minutes > 0 {
         if hours > 0 || days > 0 {
-            result.push(' ');
+            result.push(' ')
         }
 
         result.push_str(&minutes.to_string());
