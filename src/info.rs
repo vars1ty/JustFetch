@@ -104,6 +104,50 @@ pub fn get_by_type(r#type: Type) -> String {
     String::from_utf8(result).expect("[ERROR] Failed converting libc output to a String!")
 }
 
+/// Returns the uptime.
+/// For example: `1 day, 1 hour, 20 minutes`
+fn get_uptime() -> String {
+    let total_seconds =
+        read_to_string("/proc/uptime").expect("[ERROR] Failed reading /proc/uptime!");
+    let total_seconds: u32 = total_seconds
+        .split('.')
+        .next()
+        .unwrap_or_default()
+        .parse()
+        .unwrap_or_default();
+    let days = total_seconds / 86400;
+    let hours = total_seconds / 3600;
+    let minutes = total_seconds % 3600 / 60;
+    let mut result = String::new();
+
+    // Pretty-format it before returning
+    if days > 0 {
+        result.push_str(&days.to_string());
+        result.push_str(if days > 1 { " days" } else { " day" })
+    }
+
+    if hours > 0 {
+        if days > 0 {
+            result.push(' ');
+        }
+
+        result.push_str(&hours.to_string());
+        result.push_str(if hours > 1 { " hours" } else { " hour" });
+        result.push(',');
+    }
+
+    if minutes > 0 {
+        if hours > 0 || days > 0 {
+            result.push(' ');
+        }
+
+        result.push_str(&minutes.to_string());
+        result.push_str(if minutes > 1 { " minutes" } else { " minute" });
+    }
+
+    result
+}
+
 /// Fetches system information.
 pub fn get_system_information() -> Option<SystemInfo> {
     let os_release =
@@ -117,17 +161,7 @@ pub fn get_system_information() -> Option<SystemInfo> {
     let hostname = get_by_type(Type::HostName);
     let shell = env!("SHELL").split('/').last()?.to_owned();
     let kernel = get_by_type(Type::KernelVersion);
-    let mut uptime = utils::execute("uptime -p");
-
-    // Get the first entry when split by a whitespace, then remove it.
-    // For example: "up 10 minutes" => "10 minutes".
-    let uptime_start = uptime
-        .to_owned()
-        .split_whitespace()
-        .next()
-        .expect("[ERROR] Failed splitting by whitespace on uptime_start!")
-        .to_owned();
-    uptime = uptime.replace(&format!("{uptime_start} "), "");
+    let uptime = get_uptime();
 
     let total_mem = minf_get_gb(&meminfo, "MemTotal");
     let cached_mem = minf_get_gb(&meminfo, "Cached");
@@ -137,11 +171,11 @@ pub fn get_system_information() -> Option<SystemInfo> {
         .unwrap()
         .parse()
         .unwrap();
-    let free_kb: f64 = parse_minf_key(&meminfo, "MemAvailable")
+    let available_kb: f64 = parse_minf_key(&meminfo, "MemAvailable")
         .unwrap()
         .parse()
         .unwrap();
-    let used_mem = utils::kb_to_gb(total_kb - free_kb);
+    let used_mem = utils::kb_to_gb(total_kb - available_kb);
 
     Some(SystemInfo {
         distro_name,
