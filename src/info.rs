@@ -53,7 +53,8 @@ pub fn parse_osr_key(os_release: &str, key: &str) -> Option<String> {
 
 /// Parses the given MemInfo key as a `String`.
 pub fn parse_minf_key(meminfo: &str, key: &str) -> Option<String> {
-    for line in meminfo.lines() {
+    let lines = meminfo.lines();
+    for line in lines {
         if !line.starts_with(key) {
             // Doesn't have the key we are looking for.
             continue;

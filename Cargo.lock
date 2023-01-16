@@ -38,7 +38,7 @@ checksum = "aaa3a8d9a1ca92e282c96a32d6511b695d7d994d1d102ba85d279f9b2756947f"
 
 [[package]]
 name = "just-fetch"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "ansi_rgb",
  "arguments",

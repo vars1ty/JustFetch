@@ -1,6 +1,7 @@
 use ansi_rgb::Foreground;
 use arguments::Arguments;
 use rgb::RGB8;
+use std::time::Instant;
 
 mod info;
 mod utils;
@@ -9,7 +10,6 @@ mod utils;
 fn setup_args() -> Arguments {
     let args = std::env::args();
     let args = arguments::parse(args).expect("[ERROR] Failed parsing CLI Arguments!");
-    // Help argument.
     if args.get::<String>("help").is_some() {
         println!(
             r#"[JustFetch]: --red   : 0 to 255
@@ -33,5 +33,12 @@ fn get_color(args: Arguments) -> RGB8 {
 
 /// Main startup function.
 fn main() {
-    println!("{}", utils::print().fg(get_color(setup_args())));
+    let args = setup_args();
+    let show_elapsed = args.get::<bool>("elapsed").unwrap_or_default();
+    let now = Instant::now();
+    println!("{}", utils::print().fg(get_color(args)));
+    if show_elapsed {
+        let elapsed = now.elapsed();
+        println!("Elapsed (Start » End): {elapsed:.2?}");
+    }
 }
