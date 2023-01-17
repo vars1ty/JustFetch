@@ -53,19 +53,8 @@ pub fn parse_osr_key(os_release: &str, key: &str) -> Option<String> {
 
 /// Parses the given MemInfo key as a `String`.
 pub fn parse_minf_key(meminfo: &str, key: &str) -> Option<String> {
-    let lines = meminfo.lines();
-    for line in lines {
-        if !line.starts_with(key) {
-            // Doesn't have the key we are looking for.
-            continue;
-        }
-
-        // Trim to get rid of the repeated whitespaces, making parsing easier.
-        let line = line.trim();
-        return Some(line.split_whitespace().nth(1)?.to_owned());
-    }
-
-    None
+    let line = meminfo.lines().find(|line| line.starts_with(key))?;
+    Some(line.trim().split_whitespace().nth(1)?.to_owned())
 }
 
 /// Converts the value of the given MemInfo key, into the gigabytes representation.
@@ -176,11 +165,11 @@ pub fn get_system_information() -> Option<SystemInfo> {
     let total_kb: f64 = parse_minf_key(&meminfo, "MemTotal")
         .unwrap()
         .parse()
-        .unwrap();
+        .unwrap_or_default();
     let available_kb: f64 = parse_minf_key(&meminfo, "MemAvailable")
         .unwrap()
         .parse()
-        .unwrap();
+        .unwrap_or_default();
     let used_mem = utils::kb_to_gb(total_kb - available_kb);
 
     Some(SystemInfo {

@@ -1,6 +1,5 @@
-use byte_unit::Byte;
-
 use crate::info;
+use byte_unit::Byte;
 use std::{collections::HashMap, fs::read_to_string, process::Command};
 
 /// Converts kilobytes to gigabytes.
@@ -117,12 +116,11 @@ pub fn parse_command(line: &str) -> String {
 
 /// Executes a command and returns the output.
 pub fn execute(cmd: &str) -> String {
-    let mut result;
     if cmd.is_empty() {
         return String::default();
     }
 
-    result = String::from_utf8_lossy(
+    let mut result = String::from_utf8_lossy(
         &Command::new("sh")
             .args(["-c", cmd])
             .output()
