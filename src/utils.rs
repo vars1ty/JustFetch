@@ -14,13 +14,13 @@ pub fn print() -> String {
         "/home/{}/.config/JustFetch/config",
         info::get_by_type(info::Type::Username)
     );
-    let mut cfg = read_to_string(&cfg).unwrap_or(
+    let mut cfg = read_to_string(cfg).unwrap_or_else(|_| {
         r#"Distro: [distro]
 Kernel: [kernel]
 Username: [username]
 Create your own config at ~/.config/JustFetch/config"#
-            .to_owned(),
-    );
+            .to_owned()
+    });
 
     // Fetch the final content into `cfg`.
     fetch(&mut cfg);
@@ -97,7 +97,7 @@ fn get_from_cache(
         cache.get(raw_command).unwrap().to_owned()
     } else {
         // Not found, cache it so we can reuse the result if needed.
-        let res = execute(&command);
+        let res = execute(command);
         cache.insert(raw_command.to_owned(), res.to_owned());
         res
     };

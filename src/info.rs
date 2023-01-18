@@ -54,7 +54,7 @@ pub fn parse_osr_key(os_release: &str, key: &str) -> Option<String> {
 /// Parses the given MemInfo key as a `String`.
 pub fn parse_minf_key(meminfo: &str, key: &str) -> Option<String> {
     let line = meminfo.lines().find(|line| line.starts_with(key))?;
-    Some(line.trim().split_whitespace().nth(1)?.to_owned())
+    Some(line.split_whitespace().nth(1)?.to_owned())
 }
 
 /// Converts the value of the given MemInfo key, into the gigabytes representation.
@@ -70,28 +70,22 @@ pub fn get_by_type(r#type: Type) -> String {
     // Store the output of `uname` into `info` as long as the type isn't `Username`.
     if r#type != Type::Username {
         unsafe { libc::uname(&mut info as *mut _) };
-    } else {
-        // Drop `info` to free its resources asap, since it won't be used.
-        drop(info)
     }
 
-    let result;
-    match r#type {
+    let result = match r#type {
         Type::Username => unsafe {
-            return CStr::from_ptr(libc::getlogin())
+            CStr::from_ptr(libc::getlogin())
                 .to_str()
                 .expect("[ERROR] Failed retrieving username!")
-                .to_owned();
+                .to_owned()
         },
-        Type::HostName => {
-            result = bytes_to_u8!(info.nodename);
-        }
-        Type::KernelVersion => {
-            result = bytes_to_u8!(info.release);
-        }
-    }
+        Type::HostName => String::from_utf8(bytes_to_u8!(info.nodename))
+            .expect("[ERROR] Failed converting libc HostName output to a String!"),
+        Type::KernelVersion => String::from_utf8(bytes_to_u8!(info.nodename))
+            .expect("[ERROR] Failed converting libc KernelVersion output to a String!"),
+    };
 
-    String::from_utf8(result).expect("[ERROR] Failed converting libc output to a String!")
+    result
 }
 
 /// Returns the uptime.
@@ -138,6 +132,17 @@ fn get_uptime() -> String {
 
         result.push_str(&minutes.to_string());
         result.push_str(if minutes > 1 { " minutes" } else { " minute" });
+    }
+
+    // If the result is empty, then the system was most probably just powered on, so display the
+    // seconds.
+    if result.is_empty() {
+        result = total_seconds.to_string();
+        result.push_str(if total_seconds > 1 {
+            " seconds"
+        } else {
+            " second"
+        })
     }
 
     result
