@@ -3,7 +3,6 @@ use arguments::Arguments;
 use rgb::RGB8;
 use std::time::Instant;
 
-mod info;
 mod utils;
 
 /// Setup CLI Arguments.

@@ -44,6 +44,7 @@ dependencies = [
  "arguments",
  "byte-unit",
  "libc",
+ "lxinfo",
  "rgb",
 ]
 
@@ -52,6 +53,15 @@ name = "libc"
 version = "0.2.139"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
+
+[[package]]
+name = "lxinfo"
+version = "0.1.1"
+source = "git+https://github.com/vars1ty/lxinfo.git#20b4b10e4d047f782470d1717e226145134b6a66"
+dependencies = [
+ "byte-unit",
+ "libc",
+]
 
 [[package]]
 name = "options"

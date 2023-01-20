@@ -1,18 +1,11 @@
-use crate::info;
-use byte_unit::Byte;
+use lxinfo::info;
 use std::{collections::HashMap, fs::read_to_string, process::Command};
-
-/// Converts kilobytes to gigabytes.
-pub fn kb_to_gb(number: f64) -> String {
-    let unit = Byte::from_unit(number, byte_unit::ByteUnit::KB).unwrap();
-    unit.get_adjusted_unit(byte_unit::ByteUnit::GB).to_string()
-}
 
 /// Initializes the config, fetches and prints the result.
 pub fn print() -> String {
     let cfg = format!(
         "/home/{}/.config/JustFetch/config",
-        info::get_by_type(info::Type::Username)
+        info::get_by_type(info::Type::Username).unwrap()
     );
     let mut cfg = read_to_string(cfg).unwrap_or_else(|_| {
         r#"Distro: [distro]
@@ -51,7 +44,7 @@ fn fetch(cfg: &mut String) {
     replace_if_present(cfg, "[distro_id]", &system_info.distro_id);
     replace_if_present(cfg, "[distro_build_id]", &system_info.distro_build_id);
     replace_if_present(cfg, "[shell]", &system_info.shell);
-    replace_if_present(cfg, "[uptime]", &system_info.uptime);
+    replace_if_present(cfg, "[uptime]", &system_info.uptime_formatted);
     replace_if_present(cfg, "[total_mem]", &system_info.total_mem);
     replace_if_present(cfg, "[cached_mem]", &system_info.cached_mem);
     replace_if_present(cfg, "[available_mem]", &system_info.available_mem);
