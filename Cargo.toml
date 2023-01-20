@@ -8,9 +8,7 @@ edition = "2021"
 [dependencies]
 lxinfo = { git = "https://github.com/vars1ty/lxinfo.git" }
 arguments = "*"
-byte-unit = "*"
 ansi_rgb = "*"
-libc = "*"
 rgb = "*"
 
 [profile.release]
