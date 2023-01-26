@@ -24,6 +24,9 @@ Oh and it's fast and small, probably faster than most other fetching programs ou
 - `[used_mem]` - Used memory
 
 ## Custom Commands
+> **Warning**:
+> Custom Commands add a lot of overhead, use them sparingly.
+
 You may display text from external shell-commands by using `$cmd=[command]`.
 
 For example: `$cmd=uname -o` - Will display the operating system you are using.

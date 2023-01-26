@@ -59,7 +59,7 @@ fn parse_commands(cfg: &mut String) {
     }
 
     let mut command_cache: HashMap<String, String> = HashMap::new();
-    let lines = cfg.clone();
+    let lines = std::mem::take(cfg);
     let lines = lines.lines();
     for line in lines {
         if !line.contains(CMD) {
