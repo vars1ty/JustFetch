@@ -1,3 +1,5 @@
+#![no_main]
+
 use ansi_rgb::Foreground;
 use arguments::Arguments;
 use rgb::RGB8;
@@ -31,11 +33,13 @@ fn get_color(args: Arguments) -> RGB8 {
 }
 
 /// Main startup function.
+#[no_mangle]
 fn main() {
     let args = setup_args();
     let show_elapsed = args.get::<bool>("elapsed").unwrap_or_default();
+    let no_cmd = args.get::<bool>("no-cmd").unwrap_or_default();
     let now = Instant::now();
-    println!("{}", utils::print().fg(get_color(args)));
+    println!("{}", utils::print(no_cmd).fg(get_color(args)));
     if show_elapsed {
         let elapsed = now.elapsed();
         println!("Elapsed (Start » End): {elapsed:.2?}");

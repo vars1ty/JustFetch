@@ -2,7 +2,7 @@ use lxinfo::info;
 use std::{collections::HashMap, fs::read_to_string, process::Command};
 
 /// Initializes the config, fetches and prints the result.
-pub fn print() -> String {
+pub fn print(no_cmd: bool) -> String {
     let cfg = format!(
         "/home/{}/.config/JustFetch/config",
         info::get_by_type(info::Type::Username).unwrap()
@@ -16,7 +16,7 @@ Create your own config at ~/.config/JustFetch/config"#
     });
 
     // Fetch the final content into `cfg`.
-    fetch(&mut cfg);
+    fetch(&mut cfg, no_cmd);
     cfg
 }
 
@@ -28,8 +28,11 @@ fn replace_if_present(content: &mut String, replace: &str, with: &str) {
 }
 
 /// Fetches information and replaces strings from `cfg`.
-fn fetch(cfg: &mut String) {
-    parse_commands(cfg);
+fn fetch(cfg: &mut String, no_cmd: bool) {
+    if !no_cmd {
+        parse_commands(cfg);
+    }
+
     if !cfg.contains('[') && !cfg.contains(']') {
         // No alias characters found, spare some resources by not fetching system information.
         return;
