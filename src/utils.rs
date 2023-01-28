@@ -61,8 +61,8 @@ fn parse_commands(cfg: &mut String) {
         return;
     }
 
-    let mut command_cache: HashMap<String, String> = HashMap::new();
-    let lines = std::mem::take(cfg);
+    let mut command_cache: HashMap<&str, String> = HashMap::new();
+    let lines = cfg.to_owned();
     let lines = lines.lines();
     for line in lines {
         if !line.contains(CMD) {
@@ -74,18 +74,17 @@ fn parse_commands(cfg: &mut String) {
             panic!("[ERROR] Command on line '{line}' is empty, please specify what to execute!")
         }
 
-        let raw_command = &format!("{CMD}{command}");
         *cfg = cfg.replace(
-            raw_command,
-            &get_from_cache(&mut command_cache, raw_command, &command),
+            &format!("{CMD}{command}"),
+            &get_from_cache(&mut command_cache, line.split(CMD).nth(1).unwrap(), &command),
         )
     }
 }
 
 /// Gets a command from the `cache` if present. Otherwise it's added and then returned.
-fn get_from_cache(
-    cache: &mut HashMap<String, String>,
-    raw_command: &String,
+fn get_from_cache<'a>(
+    cache: &mut HashMap<&'a str, String>,
+    raw_command: &'a str,
     command: &str,
 ) -> String {
     let output = if cache.contains_key(raw_command) {
@@ -94,7 +93,7 @@ fn get_from_cache(
     } else {
         // Not found, cache it so we can reuse the result if needed.
         let res = execute(command);
-        cache.insert(raw_command.to_owned(), res.to_owned());
+        cache.insert(raw_command, res.to_owned());
         res
     };
 
