@@ -76,7 +76,11 @@ fn parse_commands(cfg: &mut String) {
 
         *cfg = cfg.replace(
             &format!("{CMD}{command}"),
-            &get_from_cache(&mut command_cache, line.split(CMD).nth(1).unwrap(), &command),
+            &get_from_cache(
+                &mut command_cache,
+                line.split(CMD).nth(1).unwrap(),
+                &command,
+            ),
         )
     }
 }
@@ -92,7 +96,7 @@ fn get_from_cache<'a>(
         cache.get(raw_command).unwrap().to_owned()
     } else {
         // Not found, cache it so we can reuse the result if needed.
-        let res = execute(command);
+        let res = execute(command).expect("[ERROR] Cannot execute an empty command!");
         cache.insert(raw_command, res.to_owned());
         res
     };
@@ -110,9 +114,9 @@ pub fn parse_command(line: &str) -> String {
 }
 
 /// Executes a command and returns the output.
-pub fn execute(cmd: &str) -> String {
+pub fn execute(cmd: &str) -> Option<String> {
     if cmd.is_empty() {
-        return String::default();
+        return None;
     }
 
     let mut result = String::from_utf8_lossy(
@@ -127,5 +131,5 @@ pub fn execute(cmd: &str) -> String {
     // Remove the last character as its a new line.
     result.pop();
 
-    result
+    Some(result)
 }
