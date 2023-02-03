@@ -119,14 +119,15 @@ pub fn execute(cmd: &str) -> Option<String> {
         return None;
     }
 
-    let mut result = String::from_utf8_lossy(
-        &Command::new("sh")
-            .args(["-c", cmd])
-            .output()
-            .unwrap()
-            .stdout,
-    )
-    .to_string();
+    let mut result = unsafe {
+        String::from_utf8_unchecked(
+            Command::new("sh")
+                .args(["-c", cmd])
+                .output()
+                .unwrap()
+                .stdout,
+        )
+    };
 
     // Remove the last character as its a new line.
     result.pop();
