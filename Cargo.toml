@@ -13,7 +13,8 @@ rgb = "*"
 
 [profile.release]
 overflow-checks = false
+codegen-units = 1
 panic = "abort"
-opt-level = 3
+opt-level = "z"
 strip = true
 lto = "fat"
