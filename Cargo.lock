@@ -32,9 +32,9 @@ dependencies = [
 
 [[package]]
 name = "bytemuck"
-version = "1.13.0"
+version = "1.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c041d3eab048880cb0b86b256447da3f18859a163c3b8d8893f4e6368abe6393"
+checksum = "17febce684fd15d89027105661fec94afb475cb995fbc59d2865198446ba2eea"
 
 [[package]]
 name = "just-fetch"
@@ -54,8 +54,8 @@ checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
 
 [[package]]
 name = "lxinfo"
-version = "0.1.1"
-source = "git+https://github.com/vars1ty/lxinfo.git#20b4b10e4d047f782470d1717e226145134b6a66"
+version = "0.1.2"
+source = "git+https://github.com/vars1ty/lxinfo.git#1f9a7d0adb7cb6720db55d5effb1eef7e8431e28"
 dependencies = [
  "byte-unit",
  "libc",
@@ -69,9 +69,9 @@ checksum = "61a1c9b12c453182754f3126c5689324c7214265de2df79917b59de87547a916"
 
 [[package]]
 name = "rgb"
-version = "0.8.34"
+version = "0.8.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3603b7d71ca82644f79b5a06d1220e9a58ede60bd32255f698cb1af8838b8db3"
+checksum = "20ec2d3e3fc7a92ced357df9cebd5a10b6fb2aa1ee797bf7e9ce2f17dffc8f59"
 dependencies = [
  "bytemuck",
 ]
