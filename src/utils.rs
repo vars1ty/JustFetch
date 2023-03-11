@@ -1,11 +1,11 @@
 use lxinfo::info;
-use std::{collections::HashMap, fs::read_to_string, process::Command};
+use std::{fs::read_to_string, process::Command};
 
 /// Initializes the config, fetches and prints the result.
-pub fn print(no_cmd: bool) -> String {
+pub fn print() -> String {
     let cfg = format!(
-        "/home/{}/.config/JustFetch/config",
-        info::get_by_type(info::Type::Username).unwrap()
+        "{}/.config/JustFetch/config",
+        std::env::var("HOME").unwrap()
     );
     let mut cfg = read_to_string(cfg).unwrap_or_else(|_| {
         r#"Distro: [distro]
@@ -16,7 +16,7 @@ Create your own config at ~/.config/JustFetch/config"#
     });
 
     // Fetch the final content into `cfg`.
-    fetch(&mut cfg, no_cmd);
+    fetch(&mut cfg);
     cfg
 }
 
@@ -28,8 +28,8 @@ fn replace_if_present(content: &mut String, replace: &str, with: &str) {
 }
 
 /// Fetches information and replaces strings from `cfg`.
-fn fetch(cfg: &mut String, no_cmd: bool) {
-    if !no_cmd {
+fn fetch(cfg: &mut String) {
+    if cfg.contains("$cmd=") {
         parse_commands(cfg);
     }
 
@@ -57,14 +57,21 @@ fn fetch(cfg: &mut String, no_cmd: bool) {
 /// Parses the commands from the config file.
 fn parse_commands(cfg: &mut String) {
     const CMD: &str = "$cmd=";
-    if !cfg.contains(CMD) {
-        return;
+    const SPLIT_BULK: &str = "%split%";
+
+    if cfg.contains(SPLIT_BULK) {
+        panic!("[ERROR] Your config contains \"%split%\". This is a reserved string, please remove it!")
     }
 
-    let mut command_cache: HashMap<&str, String> = HashMap::new();
     let lines = cfg.to_owned();
-    let lines = lines.lines();
-    for line in lines {
+    let lines: Vec<&str> = lines.lines().collect();
+
+    // Packing all the commands into one and splitting it yields ~1.5x faster execution, rather
+    // than calling `execute` on each command separately.
+    let mut packed_command = "echo \"".to_owned();
+
+    for i in 0..lines.len() {
+        let line = lines[i];
         if !line.contains(CMD) {
             continue;
         }
@@ -74,38 +81,32 @@ fn parse_commands(cfg: &mut String) {
             panic!("[ERROR] Command on line '{line}' is empty, please specify what to execute!")
         }
 
+        packed_command.push_str(&format!("$({command})"));
+        if i != lines.len() - 1 {
+            packed_command.push_str(SPLIT_BULK);
+        } else {
+            packed_command.push('"');
+        }
+    }
+
+    let result = execute(&packed_command).unwrap();
+    let mut result = result.split(SPLIT_BULK);
+    for line in lines {
+        if !line.contains(CMD) {
+            continue;
+        }
+
+        let res_command = result.next().unwrap();
+        let raw_command = parse_command(line);
         *cfg = cfg.replace(
-            &format!("{CMD}{command}"),
-            &get_from_cache(
-                &mut command_cache,
-                line.split(CMD).nth(1).unwrap(),
-                &command,
-            ),
-        )
+            &format!("{CMD}{raw_command}\n"),
+            &format!("{res_command}\n"),
+        );
     }
 }
 
-/// Gets a command from the `cache` if present. Otherwise it's added and then returned.
-fn get_from_cache<'a>(
-    cache: &mut HashMap<&'a str, String>,
-    raw_command: &'a str,
-    command: &str,
-) -> String {
-    let output = if cache.contains_key(raw_command) {
-        // Found in cache, return it.
-        cache.get(raw_command).unwrap().to_owned()
-    } else {
-        // Not found, cache it so we can reuse the result if needed.
-        let res = execute(command).expect("[ERROR] Cannot execute an empty command!");
-        cache.insert(raw_command, res.to_owned());
-        res
-    };
-
-    output
-}
-
 /// Parses the command. For example: `$cmd=uname -a`
-pub fn parse_command(line: &str) -> String {
+fn parse_command(line: &str) -> String {
     let split = line
         .split("$cmd=")
         .nth(1)
@@ -114,7 +115,7 @@ pub fn parse_command(line: &str) -> String {
 }
 
 /// Executes a command and returns the output.
-pub fn execute(cmd: &str) -> Option<String> {
+fn execute(cmd: &str) -> Option<String> {
     if cmd.is_empty() {
         return None;
     }
