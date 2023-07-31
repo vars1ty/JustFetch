@@ -15,7 +15,7 @@ fn setup_args() -> Arguments {
             r#"[JustFetch]: --red      : 0 to 255
 [JustFetch]: --green    : 0 to 255
 [JustFetch]: --blue     : 0 to 255
-[JustFetch]: -- elapsed : Displays how long it took to fetch the information."#
+[JustFetch]: --elapsed  : Displays how long it took to fetch the information."#
         );
         std::process::exit(0)
     }

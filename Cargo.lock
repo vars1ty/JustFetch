@@ -13,18 +13,18 @@ dependencies = [
 
 [[package]]
 name = "arguments"
-version = "0.7.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d8b6590432235ca848cccae06397e642a4e984b37c546dc1b0dcb056b9dcd23"
+checksum = "e63898dbe1952e16886475dedaeaebf28704434fb8fcf05436a0dbe01fc1118d"
 dependencies = [
  "options",
 ]
 
 [[package]]
 name = "byte-unit"
-version = "4.0.18"
+version = "4.0.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3348673602e04848647fffaa8e9a861e7b5d5cae6570727b41bde0f722514484"
+checksum = "da78b32057b8fdfc352504708feeba7216dcd65a2c9ab02978cbd288d1279b6c"
 dependencies = [
  "serde",
  "utf8-width",
@@ -48,9 +48,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.140"
+version = "0.2.147"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99227334921fae1a979cf0bfdfcc6b3e5ce376ef57e16fb6fb3ea2ed6095f80c"
+checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
 
 [[package]]
 name = "lxinfo"
@@ -63,9 +63,9 @@ dependencies = [
 
 [[package]]
 name = "options"
-version = "0.5.2"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61a1c9b12c453182754f3126c5689324c7214265de2df79917b59de87547a916"
+checksum = "011a039a066746d788a814f9d597d09f2230a77677eddf9dfcbf37389e667e41"
 
 [[package]]
 name = "rgb"
@@ -78,9 +78,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.154"
+version = "1.0.179"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8cdd151213925e7f1ab45a9bbfb129316bd00799784b174b7cc7bcd16961c49e"
+checksum = "0a5bf42b8d227d4abf38a1ddb08602e229108a517cd4e5bb28f9c7eaafdce5c0"
 
 [[package]]
 name = "utf8-width"

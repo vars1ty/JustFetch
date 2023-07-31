@@ -37,3 +37,8 @@ If you don't use custom commands and want to exclude them entirely, add the `--n
 You can specify a custom output color for the whole message by passing `--red` / `--green` / `--blue` with a value from `0` to `255`.
 
 For example: `./just-fetch --red 0 --green 255 --blue 0`
+
+## Building
+JustFetch uses `xargo` to build, you can of course still use normal `cargo` if you don't want to benefit from the smaller file-size.
+
+Use `./build.sh` to build using `xargo`, assuming you have it installed alongside with `rust-src`.

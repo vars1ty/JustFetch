@@ -20,11 +20,9 @@ Create your own config at ~/.config/JustFetch/config"#
     cfg
 }
 
-/// Replaces a string in `content` if found.
-fn replace_if_present(content: &mut String, replace: &str, with: &str) {
-    if content.contains(replace) {
-        *content = content.replace(replace, with);
-    }
+/// Replaces a string in `content`.
+fn replace(content: &mut String, replace: &str, with: &str) {
+    *content = content.replace(replace, with);
 }
 
 /// Fetches information and replaces strings from `cfg`.
@@ -40,18 +38,18 @@ fn fetch(cfg: &mut String) {
 
     let system_info =
         info::get_system_information().expect("[ERROR] Failed fetching system information!");
-    replace_if_present(cfg, "[host]", &system_info.hostname);
-    replace_if_present(cfg, "[kernel]", &system_info.kernel);
-    replace_if_present(cfg, "[username]", &system_info.username);
-    replace_if_present(cfg, "[distro]", &system_info.distro_name);
-    replace_if_present(cfg, "[distro_id]", &system_info.distro_id);
-    replace_if_present(cfg, "[distro_build_id]", &system_info.distro_build_id);
-    replace_if_present(cfg, "[shell]", &system_info.shell);
-    replace_if_present(cfg, "[uptime]", &system_info.uptime_formatted);
-    replace_if_present(cfg, "[total_mem]", &system_info.total_mem);
-    replace_if_present(cfg, "[cached_mem]", &system_info.cached_mem);
-    replace_if_present(cfg, "[available_mem]", &system_info.available_mem);
-    replace_if_present(cfg, "[used_mem]", &system_info.used_mem);
+    replace(cfg, "[host]", &system_info.hostname);
+    replace(cfg, "[kernel]", &system_info.kernel);
+    replace(cfg, "[username]", &system_info.username);
+    replace(cfg, "[distro]", &system_info.distro_name);
+    replace(cfg, "[distro_id]", &system_info.distro_id);
+    replace(cfg, "[distro_build_id]", &system_info.distro_build_id);
+    replace(cfg, "[shell]", &system_info.shell);
+    replace(cfg, "[uptime]", &system_info.uptime_formatted);
+    replace(cfg, "[total_mem]", &system_info.total_mem);
+    replace(cfg, "[cached_mem]", &system_info.cached_mem);
+    replace(cfg, "[available_mem]", &system_info.available_mem);
+    replace(cfg, "[used_mem]", &system_info.used_mem);
 }
 
 /// Parses the commands from the config file.
@@ -106,12 +104,10 @@ fn parse_commands(cfg: &mut String) {
 }
 
 /// Parses the command. For example: `$cmd=uname -a`
-fn parse_command(line: &str) -> String {
-    let split = line
-        .split("$cmd=")
+fn parse_command(line: &str) -> &str {
+    line.split("$cmd=")
         .nth(1)
-        .expect("[ERROR] Failed parsing command!");
-    split.to_owned()
+        .expect("[ERROR] Failed parsing command!")
 }
 
 /// Executes a command and returns the output.
