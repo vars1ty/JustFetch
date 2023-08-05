@@ -27,8 +27,9 @@ fn replace(content: &mut String, replace: &str, with: &str) {
 
 /// Fetches information and replaces strings from `cfg`.
 fn fetch(cfg: &mut String) {
-    if cfg.contains("$cmd=") {
-        parse_commands(cfg);
+    const CMD: &str = "$cmd=";
+    if cfg.contains(CMD) {
+        parse_commands(cfg, CMD);
     }
 
     if !cfg.contains('[') && !cfg.contains(']') {
@@ -53,8 +54,7 @@ fn fetch(cfg: &mut String) {
 }
 
 /// Parses the commands from the config file.
-fn parse_commands(cfg: &mut String) {
-    const CMD: &str = "$cmd=";
+fn parse_commands(cfg: &mut String, cmd: &str) {
     const SPLIT_BULK: &str = "%split%";
 
     if cfg.contains(SPLIT_BULK) {
@@ -70,11 +70,11 @@ fn parse_commands(cfg: &mut String) {
 
     for i in 0..lines.len() {
         let line = lines[i];
-        if !line.contains(CMD) {
+        if !line.contains(cmd) {
             continue;
         }
 
-        let command = parse_command(line);
+        let command = parse_command(line, cmd);
         if command.is_empty() {
             panic!("[ERROR] Command on line '{line}' is empty, please specify what to execute!")
         }
@@ -90,22 +90,22 @@ fn parse_commands(cfg: &mut String) {
     let result = execute(&packed_command).unwrap();
     let mut result = result.split(SPLIT_BULK);
     for line in lines {
-        if !line.contains(CMD) {
+        if !line.contains(cmd) {
             continue;
         }
 
         let res_command = result.next().unwrap();
-        let raw_command = parse_command(line);
+        let raw_command = parse_command(line, cmd);
         *cfg = cfg.replace(
-            &format!("{CMD}{raw_command}\n"),
+            &format!("{cmd}{raw_command}\n"),
             &format!("{res_command}\n"),
         );
     }
 }
 
 /// Parses the command. For example: `$cmd=uname -a`
-fn parse_command(line: &str) -> &str {
-    line.split("$cmd=")
+fn parse_command<'a>(line: &'a str, cmd: &'a str) -> &'a str {
+    line.split(cmd)
         .nth(1)
         .expect("[ERROR] Failed parsing command!")
 }
