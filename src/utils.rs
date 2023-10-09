@@ -1,11 +1,15 @@
 use lxinfo::info;
 use std::{fs::read_to_string, process::Command};
 
+use crate::parser::Parser;
+
 /// Initializes the config, fetches and prints the result.
 pub fn print() -> String {
     let cfg = format!(
         "{}/.config/JustFetch/config",
-        std::env::var("HOME").unwrap()
+        std::env::var("HOME").unwrap_or_else(
+            |_| std::env::var("XDG_CONFIG_HOME").expect("[ERROR] No XDG_CONFIG_HOME!")
+        )
     );
     let mut cfg = read_to_string(cfg).unwrap_or_else(|_| {
         r#"Distro: [distro]
@@ -17,6 +21,7 @@ Create your own config at ~/.config/JustFetch/config"#
 
     // Fetch the final content into `cfg`.
     fetch(&mut cfg);
+    Parser::parse_color(&mut cfg);
     cfg
 }
 
@@ -29,7 +34,7 @@ fn replace(content: &mut String, replace: &str, with: &str) {
 fn fetch(cfg: &mut String) {
     const CMD: &str = "$cmd=";
     if cfg.contains(CMD) {
-        parse_commands(cfg, CMD);
+        Parser::parse_commands(cfg, CMD);
     }
 
     if !cfg.contains('[') && !cfg.contains(']') {
@@ -53,65 +58,8 @@ fn fetch(cfg: &mut String) {
     replace(cfg, "[used_mem]", &system_info.used_mem);
 }
 
-/// Parses the commands from the config file.
-fn parse_commands(cfg: &mut String, cmd: &str) {
-    const SPLIT_BULK: &str = "%split%";
-
-    if cfg.contains(SPLIT_BULK) {
-        panic!("[ERROR] Your config contains \"%split%\". This is a reserved string, please remove it!")
-    }
-
-    let lines = cfg.to_owned();
-    let lines: Vec<&str> = lines.lines().collect();
-
-    // Packing all the commands into one and splitting it yields ~1.5x faster execution, rather
-    // than calling `execute` on each command separately.
-    let mut packed_command = "echo \"".to_owned();
-
-    for i in 0..lines.len() {
-        let line = lines[i];
-        if !line.contains(cmd) {
-            continue;
-        }
-
-        let command = parse_command(line, cmd);
-        if command.is_empty() {
-            panic!("[ERROR] Command on line '{line}' is empty, please specify what to execute!")
-        }
-
-        packed_command.push_str(&format!("$({command})"));
-        if i != lines.len() - 1 {
-            packed_command.push_str(SPLIT_BULK);
-        } else {
-            packed_command.push('"');
-        }
-    }
-
-    let result = execute(&packed_command).unwrap();
-    let mut result = result.split(SPLIT_BULK);
-    for line in lines {
-        if !line.contains(cmd) {
-            continue;
-        }
-
-        let res_command = result.next().unwrap();
-        let raw_command = parse_command(line, cmd);
-        *cfg = cfg.replace(
-            &format!("{cmd}{raw_command}\n"),
-            &format!("{res_command}\n"),
-        );
-    }
-}
-
-/// Parses the command. For example: `$cmd=uname -a`
-fn parse_command<'a>(line: &'a str, cmd: &'a str) -> &'a str {
-    line.split(cmd)
-        .nth(1)
-        .expect("[ERROR] Failed parsing command!")
-}
-
 /// Executes a command and returns the output.
-fn execute(cmd: &str) -> Option<String> {
+pub fn execute(cmd: &str) -> Option<String> {
     if cmd.is_empty() {
         return None;
     }

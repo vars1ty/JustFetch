@@ -6,6 +6,7 @@ use rgb::RGB8;
 use std::time::Instant;
 
 mod utils;
+mod parser;
 
 /// Setup CLI Arguments.
 fn setup_args() -> Arguments {
