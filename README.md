@@ -44,8 +44,3 @@ Different from the custom color listed above, this applies to user-defined secti
 For example: `rgb["Hello, I'm red!", 255, 0, 0]` applies a red color to the text `Hello, I'm red!`.
 
 If you use this mixed with the command-line arguments listed above, then it uses the specified cli-color up until your config color.
-
-## Building
-JustFetch uses `xargo` to build, you can of course still use normal `cargo` if you don't want to benefit from the smaller file-size.
-
-Use `./build.sh` to build using `xargo`, assuming you have it installed alongside with `rust-src`.

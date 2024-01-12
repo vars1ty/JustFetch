@@ -28,22 +28,22 @@ impl Parser {
                 .as_str();
             let r: u8 = capture
                 .get(2)
-                .expect("[ERROR] Failed getting regex r at index 2!")
+                .expect("[ERROR] Failed getting regex R at index 2!")
                 .as_str()
                 .parse()
-                .expect("[ERROR] Failed parsing R!");
+                .expect("[ERROR] Failed parsing R as u8!");
             let g: u8 = capture
                 .get(3)
-                .expect("[ERROR] Failed getting regex g at index 3!")
+                .expect("[ERROR] Failed getting regex G at index 3!")
                 .as_str()
                 .parse()
-                .expect("[ERROR] Failed parsing G!");
+                .expect("[ERROR] Failed parsing G as u8!");
             let b: u8 = capture
                 .get(4)
-                .expect("[ERROR] Failed getting regex b at index 4!")
+                .expect("[ERROR] Failed getting regex B at index 4!")
                 .as_str()
                 .parse()
-                .expect("[ERROR] Failed parsing B!");
+                .expect("[ERROR] Failed parsing B as u8!");
             *cfg = cfg.replace(whole, &content.color(RGB::new(r, g, b)).to_string());
         }
     }
@@ -56,7 +56,7 @@ impl Parser {
         }
 
         let lines = cfg.to_owned();
-        let mut lines: Vec<&str> = lines.lines().collect();
+        let mut lines: Vec<&str> = lines.lines().filter(|line| line.contains(cmd)).collect();
 
         // Packing all the commands into one and splitting it yields ~1.5x faster execution, rather
         // than calling `execute` on each command separately.
@@ -73,16 +73,17 @@ impl Parser {
                 panic!("[ERROR] Command on line '{line}' is empty, please specify what to execute!")
             }
 
-            packed_command.push_str(&format!("$({command})"));
-            if i != lines.len() - 1 {
-                packed_command.push_str(SPLIT_BULK);
-            } else {
-                packed_command.push('"');
-            }
+            packed_command += &format!("$({command})");
+            packed_command += SPLIT_BULK;
         }
 
-        let result = execute(&packed_command).unwrap();
+        packed_command.push('"');
+
+        let result = execute(&packed_command).expect("[ERROR] Failed executing custom command!");
         let mut result = result.split(SPLIT_BULK);
+
+        // Only keep the lines that have a command defined, as we'll be executing it and getting
+        // its output, then replacing the command in `cfg`.
         lines.retain(|line| line.contains(cmd));
         for line in lines {
             let res_command = result.next().unwrap();

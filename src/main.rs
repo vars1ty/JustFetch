@@ -5,19 +5,20 @@ use arguments::Arguments;
 use rgb::RGB8;
 use std::time::Instant;
 
-mod utils;
 mod parser;
+mod utils;
+
+/// The help message displayed when you do `./just-fetch --help`.
+const HELP_MESSAGE: &str = r#"[JustFetch]: --red      : 0 to 255
+[JustFetch]: --green    : 0 to 255
+[JustFetch]: --blue     : 0 to 255
+[JustFetch]: --elapsed  : Displays how long it took to fetch the information."#;
 
 /// Setup CLI Arguments.
 fn setup_args() -> Arguments {
     let args = arguments::parse(std::env::args()).expect("[ERROR] Failed parsing CLI Arguments!");
     if args.get::<String>("help").is_some() {
-        println!(
-            r#"[JustFetch]: --red      : 0 to 255
-[JustFetch]: --green    : 0 to 255
-[JustFetch]: --blue     : 0 to 255
-[JustFetch]: --elapsed  : Displays how long it took to fetch the information."#
-        );
+        println!("{}", HELP_MESSAGE);
         std::process::exit(0)
     }
 
@@ -50,6 +51,7 @@ fn main() {
     } else {
         None
     };
+
     if has_specified_color(&args) {
         println!("{}", utils::print().fg(get_color(args)));
     } else {
