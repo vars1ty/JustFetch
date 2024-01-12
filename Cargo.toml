@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 lxinfo = { git = "https://github.com/vars1ty/lxinfo.git" }
-lazy-regex = "3.0.2"
+lazy-regex = "3.1.0"
 colorful = "0.2.2"
 arguments = "*"
 ansi_rgb = "*"
