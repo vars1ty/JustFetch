@@ -46,7 +46,7 @@ fn get_color(args: Arguments) -> RGB8 {
 fn main() {
     let args = setup_args();
     let show_elapsed = args.get::<bool>("elapsed").unwrap_or_default();
-    let now = if show_elapsed {
+    let mut now = if show_elapsed {
         Some(Instant::now())
     } else {
         None
@@ -58,8 +58,12 @@ fn main() {
         // No color to override, skip creating a new instance of RGB8
         println!("{}", utils::print())
     }
-    if show_elapsed {
-        let elapsed = now.unwrap().elapsed();
-        println!("Elapsed (Start » End): {elapsed:.2?}");
+
+    if let Some(now) = now.take() {
+        if !show_elapsed {
+            return;
+        }
+
+        println!("Elapsed (Start » End): {:.2?}", now.elapsed());
     }
 }

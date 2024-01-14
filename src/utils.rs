@@ -1,7 +1,6 @@
+use crate::parser::Parser;
 use lxinfo::info;
 use std::{fs::read_to_string, process::Command};
-
-use crate::parser::Parser;
 
 /// Initializes the config, fetches and prints the result.
 pub fn print() -> String {
@@ -26,6 +25,7 @@ Create your own config at ~/.config/JustFetch/config"#
 }
 
 /// Replaces a string in `content`.
+#[inline(always)]
 fn replace(content: &mut String, replace: &str, with: &str) {
     *content = content.replace(replace, with);
 }
@@ -64,18 +64,16 @@ pub fn execute(cmd: &str) -> Option<String> {
         return None;
     }
 
-    let mut result = unsafe {
-        String::from_utf8_unchecked(
-            Command::new("sh")
-                .args(["-c", cmd])
-                .output()
-                .unwrap()
-                .stdout,
-        )
-    };
-
-    // Remove the last character as its a new line.
-    result.pop();
-
-    Some(result)
+    String::from_utf8(
+        Command::new("sh")
+            .args(["-c", cmd])
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .ok()
+    .map(|mut result| {
+        result.pop();
+        result
+    })
 }

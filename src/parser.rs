@@ -1,6 +1,6 @@
 use crate::utils::execute;
 use colorful::{Colorful, RGB};
-use lazy_regex::regex;
+use lazy_regex::regex_replace_all;
 
 pub struct Parser;
 
@@ -13,39 +13,18 @@ impl Parser {
             return;
         }
 
-        let cfg_clone = cfg.to_owned();
-        let regex =
-            regex!(r#"rgb\["(.*?)",\s*(\d+),\s*(\d+),\s*(\d+)\]"#).captures_iter(&cfg_clone);
-        //println!("{content}, {r}, {g}, {b}");
-        for capture in regex {
-            let whole = capture
-                .get(0)
-                .expect("[ERROR] Failed getting whole content at index 0!")
-                .as_str();
-            let content = capture
-                .get(1)
-                .expect("[ERROR] Failed getting regex content at index 1!")
-                .as_str();
-            let r: u8 = capture
-                .get(2)
-                .expect("[ERROR] Failed getting regex R at index 2!")
-                .as_str()
-                .parse()
-                .expect("[ERROR] Failed parsing R as u8!");
-            let g: u8 = capture
-                .get(3)
-                .expect("[ERROR] Failed getting regex G at index 3!")
-                .as_str()
-                .parse()
-                .expect("[ERROR] Failed parsing G as u8!");
-            let b: u8 = capture
-                .get(4)
-                .expect("[ERROR] Failed getting regex B at index 4!")
-                .as_str()
-                .parse()
-                .expect("[ERROR] Failed parsing B as u8!");
-            *cfg = cfg.replace(whole, &content.color(RGB::new(r, g, b)).to_string());
-        }
+        *cfg = regex_replace_all!(
+            r#"rgb\["(.*?)",\s*(\d+),\s*(\d+),\s*(\d+)\]"#,
+            &cfg,
+            |_, content: &str, r: &str, g: &str, b: &str| content
+                .color(RGB::new(
+                    r.parse().expect("[ERROR] Failed parsing R as u8!"),
+                    g.parse().expect("[ERROR] Failed parsing G as u8!"),
+                    b.parse().expect("[ERROR] Failed parsing B as u8!")
+                ))
+                .to_string()
+        )
+        .to_string();
     }
     /// Parses the commands from the config file.
     pub fn parse_commands(cfg: &mut String, cmd: &str) {
