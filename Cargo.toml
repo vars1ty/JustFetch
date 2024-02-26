@@ -9,13 +9,11 @@ edition = "2021"
 lxinfo = { git = "https://github.com/vars1ty/lxinfo.git" }
 lazy-regex = "3.1.0"
 colorful = "0.2.2"
-arguments = "*"
-ansi_rgb = "*"
-rgb = "*"
 
 [profile.release]
 overflow-checks = false
 codegen-units = 1
+panic = "abort"
 opt-level = 3
 strip = true
 lto = "fat"

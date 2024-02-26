@@ -41,8 +41,7 @@ impl Parser {
         // than calling `execute` on each command separately.
         let mut packed_command = "echo \"".to_owned();
 
-        for i in 0..lines.len() {
-            let line = lines[i];
+        for line in &lines {
             if !line.contains(cmd) {
                 continue;
             }
