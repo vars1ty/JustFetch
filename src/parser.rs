@@ -1,7 +1,11 @@
-use crate::utils::execute;
+use crate::utils;
 use colorful::{Colorful, RGB};
 use lazy_regex::regex_replace_all;
 
+/// Keyword for
+const SPLIT_BULK_PLACEHOLDER: &str = " %split%";
+
+/// Parses the rgb color regex and commands inside of the config.
 pub struct Parser;
 
 impl Parser {
@@ -28,41 +32,33 @@ impl Parser {
     }
     /// Parses the commands from the config file.
     pub fn parse_commands(cfg: &mut String, cmd: &str) {
-        const SPLIT_BULK: &str = "%split%";
-
-        if cfg.contains(SPLIT_BULK) {
+        if cfg.contains(SPLIT_BULK_PLACEHOLDER) {
             panic!("[ERROR] Your config contains \"%split%\". This is a reserved string, please remove it!")
         }
 
         let lines = cfg.to_owned();
-        let mut lines: Vec<&str> = lines.lines().filter(|line| line.contains(cmd)).collect();
+        let lines: Vec<&str> = lines.lines().filter(|line| line.contains(cmd)).collect();
 
         // Packing all the commands into one and splitting it yields ~1.5x faster execution, rather
         // than calling `execute` on each command separately.
         let mut packed_command = "echo \"".to_owned();
 
         for line in &lines {
-            if !line.contains(cmd) {
-                continue;
-            }
-
             let command = Self::parse_command(line, cmd);
             if command.is_empty() {
                 panic!("[ERROR] Command on line '{line}' is empty, please specify what to execute!")
             }
 
-            packed_command += &format!("$({command})");
-            packed_command += SPLIT_BULK;
+            packed_command.push_str(&format!("$({command})"));
+            packed_command.push_str(SPLIT_BULK_PLACEHOLDER);
         }
 
         packed_command.push('"');
 
-        let result = execute(&packed_command).expect("[ERROR] Failed executing custom command!");
-        let mut result = result.split(SPLIT_BULK);
+        let result = utils::execute(&packed_command)
+            .expect("[ERROR] Failed executing commands from the config!");
+        let mut result = result.split(SPLIT_BULK_PLACEHOLDER);
 
-        // Only keep the lines that have a command defined, as we'll be executing it and getting
-        // its output, then replacing the command in `cfg`.
-        lines.retain(|line| line.contains(cmd));
         for line in lines {
             let res_command = result.next().unwrap();
             let raw_command = Self::parse_command(line, cmd);

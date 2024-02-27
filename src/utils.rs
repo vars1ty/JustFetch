@@ -6,9 +6,9 @@ use std::{fs::read_to_string, process::Command};
 pub fn print() -> String {
     let cfg = format!(
         "{}/.config/JustFetch/config",
-        std::env::var("HOME").unwrap_or_else(
-            |_| std::env::var("XDG_CONFIG_HOME").expect("[ERROR] No XDG_CONFIG_HOME!")
-        )
+        std::env::var("HOME")
+            .unwrap_or_else(|_| std::env::var("XDG_CONFIG_HOME")
+                .expect("[ERROR] No XDG_CONFIG_HOME and no HOME!"))
     );
     let mut cfg = read_to_string(cfg).unwrap_or_else(|_| {
         r#"Distro: [distro]

@@ -5,7 +5,7 @@ mod parser;
 mod utils;
 
 /// The help message displayed when you do `./just-fetch --help`.
-const HELP_MESSAGE: &str = r#"[JustFetch]: --elapsed  : Displays how long it took to fetch the information."#;
+const HELP_MESSAGE: &str = r#"[JustFetch]: --elapsed : Displays how long it took to fetch the information."#;
 
 /// Checks if the specified argument has been passed to the process.
 fn is_arg_present(arg: &str) -> Option<String> {
