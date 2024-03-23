@@ -1,33 +1,54 @@
 #![no_main]
+use crate::utils::Utils;
 use std::time::Instant;
 
 mod parser;
 mod utils;
 
 /// The help message displayed when you do `./just-fetch --help`.
-const HELP_MESSAGE: &str = r#"[JustFetch]: --elapsed : Displays how long it took to fetch the information."#;
-
-/// Checks if the specified argument has been passed to the process.
-fn is_arg_present(arg: &str) -> Option<String> {
-    std::env::args().find(|defined_arg| defined_arg == arg)
-}
+const HELP_MESSAGE: &str =
+    r#"[JustFetch]: --elapsed : Displays how long it took to fetch the information."#;
 
 /// Main startup function.
 #[no_mangle]
 fn main() {
-    if is_arg_present("--help").is_some() {
-        println!("{HELP_MESSAGE}");
-        return;
+    JustFetch::init().fetch();
+}
+
+/// Main JustFetch structure.
+struct JustFetch {
+    /// Collected arguments.
+    args: Vec<String>,
+}
+
+impl JustFetch {
+    /// Initializes a new instance of `JustFetch`.
+    pub fn init() -> Self {
+        Self {
+            args: std::env::args().collect(),
+        }
     }
 
-    let mut now = if is_arg_present("--elapsed").is_some() {
-        Some(Instant::now())
-    } else {
-        None
-    };
+    pub fn fetch(&mut self) {
+        if self.is_arg_present("--help") {
+            println!("{HELP_MESSAGE}");
+            return;
+        }
 
-    println!("{}", utils::print());
-    if let Some(now) = now.take() {
-        println!("Elapsed (Start » End): {:.2?}", now.elapsed());
+        let mut now = if self.is_arg_present("--elapsed") {
+            Some(Instant::now())
+        } else {
+            None
+        };
+
+        println!("{}", Utils::print());
+        if let Some(now) = now.take() {
+            println!("Elapsed (from start to end): {:.2?}", now.elapsed());
+        }
+    }
+
+    /// Checks if the specified argument has been passed to the process.
+    fn is_arg_present(&mut self, arg: &str) -> bool {
+        self.args.iter().any(|defined_arg| defined_arg == arg)
     }
 }

@@ -1,4 +1,4 @@
-use crate::utils;
+use crate::utils::Utils;
 use colorful::{Colorful, RGB};
 use lazy_regex::regex_replace_all;
 
@@ -55,7 +55,7 @@ impl Parser {
 
         packed_command.push('"');
 
-        let result = utils::execute(&packed_command)
+        let result = Utils::execute(&packed_command)
             .expect("[ERROR] Failed executing commands from the config!");
         let mut result = result.split(SPLIT_BULK_PLACEHOLDER);
 
