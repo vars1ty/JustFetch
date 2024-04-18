@@ -1,4 +1,3 @@
-#![no_main]
 use crate::utils::Utils;
 use std::time::Instant;
 
@@ -10,7 +9,6 @@ const HELP_MESSAGE: &str =
     r#"[JustFetch]: --elapsed : Displays how long it took to fetch the information."#;
 
 /// Main startup function.
-#[no_mangle]
 fn main() {
     JustFetch::init().fetch();
 }
@@ -29,6 +27,7 @@ impl JustFetch {
         }
     }
 
+    /// Fetches system information and prints it out.
     pub fn fetch(&mut self) {
         if self.is_arg_present("--help") {
             println!("{HELP_MESSAGE}");
