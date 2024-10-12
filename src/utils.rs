@@ -11,14 +11,15 @@ impl Utils {
         let cfg = format!(
             "{}/.config/JustFetch/config",
             std::env::var("HOME").unwrap_or_else(|_| std::env::var("XDG_CONFIG_HOME")
-                .expect("[ERROR] No XDG_CONFIG_HOME and no HOME!"))
+                .expect("[ERROR] No XDG_CONFIG_HOME or HOME!"))
         );
-        let mut cfg = read_to_string(cfg).unwrap_or_else(|_| {
-            r#"Distro: [distro]
+        let mut cfg = read_to_string(&cfg).unwrap_or_else(|_| {
+            format!(
+                r#"Distro: [distro]
 Kernel: [kernel]
 Username: [username]
-Create your own config at ~/.config/JustFetch/config"#
-                .to_owned()
+Create your own config at {cfg}"#
+            )
         });
 
         // Fetch the final content into `cfg`.

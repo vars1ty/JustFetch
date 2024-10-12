@@ -4,10 +4,6 @@ use std::time::Instant;
 mod parser;
 mod utils;
 
-/// The help message displayed when you do `./just-fetch --help`.
-const HELP_MESSAGE: &str =
-    r#"[JustFetch]: --elapsed : Displays how long it took to fetch the information."#;
-
 /// Main startup function.
 fn main() {
     JustFetch::init().fetch();
@@ -30,7 +26,9 @@ impl JustFetch {
     /// Fetches system information and prints it out.
     pub fn fetch(&mut self) {
         if self.is_arg_present("--help") {
-            println!("{HELP_MESSAGE}");
+            println!(
+                r#"[JustFetch]: --elapsed : Displays how long it took to fetch the information."#
+            );
             return;
         }
 

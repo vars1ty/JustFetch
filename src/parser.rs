@@ -1,6 +1,6 @@
 use crate::utils::Utils;
 use colorful::{Colorful, RGB};
-use lazy_regex::regex_replace_all;
+use regex_lite::Regex;
 
 /// Keyword for
 const SPLIT_BULK_PLACEHOLDER: &str = " %split%";
@@ -17,23 +17,40 @@ impl Parser {
             return;
         }
 
-        *cfg = regex_replace_all!(
-            r#"rgb\["(.*?)",\s*(\d+),\s*(\d+),\s*(\d+)\]"#,
-            &cfg,
-            |_, content: &str, r: &str, g: &str, b: &str| content
-                .color(RGB::new(
-                    r.parse().expect("[ERROR] Failed parsing R as u8!"),
-                    g.parse().expect("[ERROR] Failed parsing G as u8!"),
-                    b.parse().expect("[ERROR] Failed parsing B as u8!")
-                ))
-                .to_string()
-        )
-        .to_string();
+        let regex = Regex::new(r#"rgb\["(.*?)",\s*(\d+),\s*(\d+),\s*(\d+)\]"#)
+            .expect("[ERROR] Failed creating Regex!");
+        let mut cfg_clone = cfg.to_owned();
+        for capture in regex.captures_iter(cfg) {
+            let content = capture.get(0).unwrap().as_str();
+            let text = capture.get(1).unwrap().as_str();
+            let r = capture
+                .get(2)
+                .expect("[ERROR] Failed getting red channel!")
+                .as_str()
+                .parse::<u8>()
+                .expect("[ERROR] Failed parsing red as u8!");
+            let g = capture
+                .get(3)
+                .expect("[ERROR] Failed getting green channel!")
+                .as_str()
+                .parse::<u8>()
+                .expect("[ERROR] Failed parsing green as u8!");
+            let b = capture
+                .get(4)
+                .expect("[ERROR] Failed getting blue channel!")
+                .as_str()
+                .parse::<u8>()
+                .expect("[ERROR] Failed parsing blue as u8!");
+            cfg_clone = cfg_clone.replace(content, &text.color(RGB::new(r, g, b)).to_string());
+        }
+
+        *cfg = cfg_clone;
     }
+
     /// Parses the commands from the config file.
     pub fn parse_commands(cfg: &mut String, cmd: &str) {
         if cfg.contains(SPLIT_BULK_PLACEHOLDER) {
-            panic!("[ERROR] Your config contains \"%split%\". This is a reserved string, please remove it!")
+            panic!("[ERROR] Your config contains \"{SPLIT_BULK_PLACEHOLDER}\". This is a reserved string, please remove it!")
         }
 
         let lines = cfg.to_owned();
@@ -60,12 +77,18 @@ impl Parser {
         let mut result = result.split(SPLIT_BULK_PLACEHOLDER);
 
         for line in lines {
-            let res_command = result.next().unwrap();
-            let raw_command = Self::parse_command(line, cmd);
-            *cfg = cfg.replace(
-                &format!("{cmd}{raw_command}\n"),
-                &format!("{res_command}\n"),
-            );
+            let current_command = result.next().unwrap();
+
+            if current_command.ends_with('\n') {
+                // No need to clone current_command, just replace.
+                *cfg = cfg.replace(line, current_command);
+                continue;
+            }
+
+            // No trailing new-line character, clone and add it before replacing.
+            let mut current_command = current_command.to_owned();
+            current_command.push('\n');
+            *cfg = cfg.replace(line, &current_command);
         }
     }
 
