@@ -7,11 +7,14 @@ pub struct Utils;
 
 impl Utils {
     /// Initializes the config, fetches and prints the result.
+    /// If `HOME` isn't present, it tries to get `XDG_CONFIG_HOME`. If that doesn't exist, it opts
+    /// for `JF_HOME` as a worst-case scenario.
     pub fn print() -> String {
         let cfg = format!(
             "{}/.config/JustFetch/config",
             std::env::var("HOME").unwrap_or_else(|_| std::env::var("XDG_CONFIG_HOME")
-                .expect("[ERROR] No XDG_CONFIG_HOME or HOME!"))
+                .unwrap_or_else(|_| std::env::var("JF_HOME")
+                    .expect("[ERROR] No XDG_CONFIG_HOME, HOME or JF_HOME!")))
         );
         let mut cfg = read_to_string(&cfg).unwrap_or_else(|_| {
             format!(
