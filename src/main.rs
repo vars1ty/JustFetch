@@ -1,8 +1,13 @@
 use crate::utils::Utils;
-use std::time::Instant;
+use std::{ffi::CString, time::Instant};
 
 mod parser;
 mod utils;
+
+extern "C" {
+    /// https://en.cppreference.com/w/cpp/utility/program/system
+    fn system(cmd: *const i8) -> i32;
+}
 
 /// Main startup function.
 fn main() {
@@ -38,7 +43,16 @@ impl JustFetch {
             None
         };
 
-        println!("{}", Utils::print());
+        let result = Utils::print();
+        if self.is_arg_present("--raw") {
+            println!("{}", result);
+        } else {
+            unsafe {
+                let cstr = CString::new(format!("echo \"{result}\"")).unwrap();
+                system(cstr.as_ptr());
+            }
+        }
+
         if let Some(now) = now.take() {
             println!("Elapsed (from start to end): {:.2?}", now.elapsed());
         }

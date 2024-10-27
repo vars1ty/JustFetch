@@ -23,13 +23,11 @@ Nothing more, nothing less.
 - `[used_mem]` - Used memory
 
 ## Custom Commands
-You may display text from external shell-commands by using `$cmd=[command]`.
+You may display text from shell commands with ease, and it's supported by default as long as you don't pass `--raw`.
 
-For example: `$cmd=uname -o` - Will display the operating system you are using.
+By default, the config is a mix of bash and a custom format. So you can add `$(whoami)` to it and it'll return your username.
 
-If you don't use custom commands and want to exclude them entirely, add the `--no-cmd` argument when launching JustFetch.
-
-Do note however that custom commands add a lot of overhead and makes JustFetch slower.
+Do note however that **not** using `--raw` results in more overhead and slightly longer execution times, for the added benefit of custom commands.
 
 ## Custom Color
 You may use colors in your config by defining the text and then the RGB, like such: `rgb["Hello, I'm red!", 255, 0, 0]`, which applies a red color to the text inside.

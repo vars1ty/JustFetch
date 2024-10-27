@@ -1,9 +1,5 @@
-use crate::utils::Utils;
 use colorful::{Colorful, RGB};
 use regex_lite::Regex;
-
-/// Keyword for
-const SPLIT_BULK_PLACEHOLDER: &str = " %split%";
 
 /// Parses the rgb color regex and commands inside of the config.
 pub struct Parser;
@@ -45,57 +41,5 @@ impl Parser {
         }
 
         *cfg = cfg_clone;
-    }
-
-    /// Parses the commands from the config file.
-    pub fn parse_commands(cfg: &mut String, cmd: &str) {
-        if cfg.contains(SPLIT_BULK_PLACEHOLDER) {
-            panic!("[ERROR] Your config contains \"{SPLIT_BULK_PLACEHOLDER}\". This is a reserved string, please remove it!")
-        }
-
-        let lines = cfg.to_owned();
-        let lines: Vec<&str> = lines.lines().filter(|line| line.contains(cmd)).collect();
-
-        // Packing all the commands into one and splitting it yields ~1.5x faster execution, rather
-        // than calling `execute` on each command separately.
-        let mut packed_command = "echo \"".to_owned();
-
-        for line in &lines {
-            let command = Self::parse_command(line, cmd);
-            if command.is_empty() {
-                panic!("[ERROR] Command on line '{line}' is empty, please specify what to execute!")
-            }
-
-            packed_command.push_str(&format!("$({command})"));
-            packed_command.push_str(SPLIT_BULK_PLACEHOLDER);
-        }
-
-        packed_command.push('"');
-
-        let result = Utils::execute(&packed_command)
-            .expect("[ERROR] Failed executing commands from the config!");
-        let mut result = result.split(SPLIT_BULK_PLACEHOLDER);
-
-        for line in lines {
-            let current_command = result.next().unwrap();
-
-            if current_command.ends_with('\n') {
-                // No need to clone current_command, just replace.
-                *cfg = cfg.replace(line, current_command);
-                continue;
-            }
-
-            // No trailing new-line character, clone and add it before replacing.
-            let mut current_command = current_command.to_owned();
-            current_command.push('\n');
-            *cfg = cfg.replace(line, &current_command);
-        }
-    }
-
-    /// Parses the command. For example: `$cmd=uname -a`
-    fn parse_command<'a>(line: &'a str, cmd: &'a str) -> &'a str {
-        line.split(cmd)
-            .nth(1)
-            .expect("[ERROR] Failed parsing command!")
     }
 }

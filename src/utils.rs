@@ -1,6 +1,6 @@
 use crate::parser::Parser;
 use lxinfo::info;
-use std::{fs::read_to_string, process::Command};
+use std::fs::read_to_string;
 
 /// Utilities like printing the system information, fetching and executing shell-commands.
 pub struct Utils;
@@ -33,11 +33,6 @@ Create your own config at {cfg}"#
 
     /// Fetches information and replaces strings from `cfg`.
     fn fetch(cfg: &mut String) {
-        const CMD: &str = "$cmd=";
-        if cfg.contains(CMD) {
-            Parser::parse_commands(cfg, CMD);
-        }
-
         if !cfg.contains('[') && !cfg.contains(']') {
             // No alias characters found, spare some resources by not fetching system information.
             return;
@@ -57,26 +52,5 @@ Create your own config at {cfg}"#
         *cfg = cfg.replace("[cached_mem]", &system_info.cached_mem);
         *cfg = cfg.replace("[available_mem]", &system_info.available_mem);
         *cfg = cfg.replace("[used_mem]", &system_info.used_mem);
-    }
-
-    /// Executes a command and returns the output.
-    pub fn execute(cmd: &str) -> Option<String> {
-        if cmd.is_empty() {
-            return None;
-        }
-
-        String::from_utf8(
-            Command::new("sh")
-                .args(["-c", cmd])
-                .output()
-                .unwrap()
-                .stdout,
-        )
-        .ok()
-        .map(|mut result| {
-            // Remove trailing \n.
-            result.pop();
-            result
-        })
     }
 }
