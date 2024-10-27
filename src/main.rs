@@ -44,7 +44,7 @@ impl JustFetch {
         };
 
         let result = Utils::print();
-        if self.is_arg_present("--raw") {
+        if self.is_arg_present("--raw") || !result.contains("$(") {
             println!("{}", result);
         } else {
             unsafe {

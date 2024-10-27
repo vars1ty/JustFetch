@@ -27,7 +27,7 @@ You may display text from shell commands with ease, and it's supported by defaul
 
 By default, the config is a mix of bash and a custom format. So you can add `$(whoami)` to it and it'll return your username.
 
-Do note however that **not** using `--raw` results in more overhead and slightly longer execution times, for the added benefit of custom commands.
+If no commands are detected, JustFetch automatically acts like as if you passed `--raw` to skip any additional overhead.
 
 ## Custom Color
 You may use colors in your config by defining the text and then the RGB, like such: `rgb["Hello, I'm red!", 255, 0, 0]`, which applies a red color to the text inside.
@@ -40,8 +40,7 @@ There is no limit to how many colors you may use on one line. Doing something li
 JustFetch focuses **a lot** on performance, stability and simplicity, and it does this by:
 
 1. Not using external processes to capture the output of shell commands by default, as that's slow
-   - If you do use shell commands via `$cmd=...`, it then packs all commands into one and executes it,
-   - reducing the time taken by a lot as it also only has to use one `Command` instance rather than multiple.
+   - If you do use shell commands via `$(...command...)`, it will add a bit of overhead, but far less than other fetching programs.
 2. Using a custom crate for fetching system information in a straight-forward and fast way
 3. Making use of a super simple config, requiring no libraries outside of regular expressions for color lookups.
 4. Endless manual performance benchmarks, both against other compiled versions of itself, but also against other fetching programs.
