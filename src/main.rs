@@ -1,3 +1,5 @@
+#![feature(duration_millis_float)]
+
 use crate::utils::Utils;
 use std::{ffi::CString, time::Instant};
 
@@ -32,7 +34,9 @@ impl JustFetch {
     pub fn fetch(&mut self) {
         if self.is_arg_present("--help") {
             println!(
-                r#"[JustFetch]: --elapsed : Displays how long it took to fetch the information."#
+                r#"[JustFetch]: Commands
+    --elapsed : Displays how long it took to fetch the information.
+    --raw     : Skips bash command injection support within the config, like $(whoami)."#
             );
             return;
         }
@@ -48,13 +52,20 @@ impl JustFetch {
             println!("{result}");
         } else {
             unsafe {
-                let cstr = CString::new(format!("echo \"{result}\"")).unwrap();
-                system(cstr.as_ptr());
+                let cstr = CString::new(format!("echo \"{result}\""))
+                    .expect("[ERROR] Failed creating CString out of result content!");
+                let cstr_ptr = cstr.into_raw();
+                system(cstr_ptr);
+                drop(CString::from_raw(cstr_ptr));
             }
         }
 
         if let Some(now) = now.take() {
-            println!("Elapsed (from start to end): {:.2?}", now.elapsed());
+            println!(
+                "[JustFetch]: Took {}ms, {:.2?} in total",
+                now.elapsed().as_millis_f32(),
+                now.elapsed()
+            );
         }
     }
 
