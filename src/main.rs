@@ -4,7 +4,7 @@ use std::{ffi::CString, time::Instant};
 mod parser;
 mod utils;
 
-extern "C" {
+unsafe extern "C" {
     /// https://en.cppreference.com/w/cpp/utility/program/system
     fn system(cmd: *const i8) -> i32;
 }
@@ -45,7 +45,7 @@ impl JustFetch {
 
         let result = Utils::print();
         if self.is_arg_present("--raw") || !result.contains("$(") {
-            println!("{}", result);
+            println!("{result}");
         } else {
             unsafe {
                 let cstr = CString::new(format!("echo \"{result}\"")).unwrap();

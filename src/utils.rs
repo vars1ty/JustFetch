@@ -1,22 +1,23 @@
 use crate::parser::Parser;
 use lxinfo::info;
-use std::fs::read_to_string;
 
 /// Utilities like printing the system information, fetching and executing shell-commands.
 pub struct Utils;
 
 impl Utils {
     /// Initializes the config, fetches and prints the result.
-    /// If `HOME` isn't present, it tries to get `XDG_CONFIG_HOME`. If that doesn't exist, it opts
-    /// for `JF_HOME` as a worst-case scenario.
+    /// If `JF_HOME` wasn't specified, then it tries to get the home path
+    /// automatically.
     pub fn print() -> String {
         let cfg = format!(
             "{}/.config/JustFetch/config",
-            std::env::var("HOME").unwrap_or_else(|_| std::env::var("XDG_CONFIG_HOME")
-                .unwrap_or_else(|_| std::env::var("JF_HOME")
-                    .expect("[ERROR] No XDG_CONFIG_HOME, HOME or JF_HOME!")))
+            std::env::var("JF_HOME").unwrap_or_else(|_| std::env::home_dir()
+                .expect("[ERROR] No home directory found, and JF_HOME was unspecified!")
+                .to_str()
+                .expect("[ERROR] Failed to get home directory as a &str!")
+                .to_owned())
         );
-        let mut cfg = read_to_string(&cfg).unwrap_or_else(|_| {
+        let mut cfg = std::fs::read_to_string(&cfg).unwrap_or_else(|_| {
             format!(
                 r#"Distro: [distro]
 Kernel: [kernel]
@@ -40,17 +41,28 @@ Create your own config at {cfg}"#
 
         let system_info =
             info::get_system_information().expect("[ERROR] Failed fetching system information!");
-        *cfg = cfg.replace("[host]", &system_info.hostname);
-        *cfg = cfg.replace("[kernel]", &system_info.kernel);
-        *cfg = cfg.replace("[username]", &system_info.username);
-        *cfg = cfg.replace("[distro]", &system_info.distro_name);
-        *cfg = cfg.replace("[distro_id]", &system_info.distro_id);
-        *cfg = cfg.replace("[distro_build_id]", &system_info.distro_build_id);
-        *cfg = cfg.replace("[shell]", &system_info.shell);
-        *cfg = cfg.replace("[uptime]", &system_info.uptime_formatted);
-        *cfg = cfg.replace("[total_mem]", &system_info.total_mem);
-        *cfg = cfg.replace("[cached_mem]", &system_info.cached_mem);
-        *cfg = cfg.replace("[available_mem]", &system_info.available_mem);
-        *cfg = cfg.replace("[used_mem]", &system_info.used_mem);
+        Self::replace_if_found("[host]", &system_info.hostname, cfg);
+        Self::replace_if_found("[username]", &system_info.username, cfg);
+        Self::replace_if_found("[kernel]", &system_info.kernel, cfg);
+        Self::replace_if_found("[distro]", &system_info.distro_name, cfg);
+        Self::replace_if_found("[distro_id]", &system_info.distro_id, cfg);
+        Self::replace_if_found("[distro_build_id]", &system_info.distro_build_id, cfg);
+        Self::replace_if_found("[shell]", &system_info.shell, cfg);
+        Self::replace_if_found("[uptime]", &system_info.uptime_formatted, cfg);
+        Self::replace_if_found("[total_mem]", &system_info.total_mem, cfg);
+        Self::replace_if_found("[cached_mem]", &system_info.cached_mem, cfg);
+        Self::replace_if_found("[available_mem]", &system_info.available_mem, cfg);
+        Self::replace_if_found("[used_mem]", &system_info.used_mem, cfg);
+    }
+
+    /// Replaces `find` with `replace` if found inside of `output`.
+    /// This uses `output.contains` before calling `replace`, in order to prevent creating a new
+    /// string unless needed.
+    fn replace_if_found(find: &str, replace: &str, output: &mut String) {
+        if !output.contains(find) {
+            return;
+        }
+
+        *output = output.replace(find, replace);
     }
 }

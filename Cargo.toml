@@ -2,10 +2,10 @@ cargo-features = ["trim-paths"]
 
 [package]
 name = "just-fetch"
-version = "0.1.4"
-authors = [ "varsity <varsity@duck.com>" ]
-description = "A simple minimal neofetch alternative"
-edition = "2021"
+version = "0.1.5"
+authors = ["varsity <vrs@resistant.ch>"]
+description = "A simple minimal fetching program made for Linux"
+edition = "2024"
 
 [dependencies]
 lxinfo = { git = "https://github.com/vars1ty/lxinfo.git" }
@@ -13,7 +13,6 @@ regex-lite = "0.1.6"
 colorful = "0.3.2"
 
 [profile.release]
-overflow-checks = false
 codegen-units = 1
 panic = "abort"
 opt-level = "z"

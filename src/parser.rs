@@ -17,27 +17,18 @@ impl Parser {
             .expect("[ERROR] Failed creating Regex!");
         let mut cfg_clone = cfg.to_owned();
         for capture in regex.captures_iter(cfg) {
-            let content = capture.get(0).unwrap().as_str();
-            let text = capture.get(1).unwrap().as_str();
-            let r = capture
-                .get(2)
-                .expect("[ERROR] Failed getting red channel!")
-                .as_str()
-                .parse::<u8>()
+            let (content, text_rgba) = capture.extract::<4>();
+            let r = text_rgba[1]
+                .parse()
                 .expect("[ERROR] Failed parsing red as u8!");
-            let g = capture
-                .get(3)
-                .expect("[ERROR] Failed getting green channel!")
-                .as_str()
-                .parse::<u8>()
+            let g = text_rgba[2]
+                .parse()
                 .expect("[ERROR] Failed parsing green as u8!");
-            let b = capture
-                .get(4)
-                .expect("[ERROR] Failed getting blue channel!")
-                .as_str()
-                .parse::<u8>()
+            let b = text_rgba[3]
+                .parse()
                 .expect("[ERROR] Failed parsing blue as u8!");
-            cfg_clone = cfg_clone.replace(content, &text.color(RGB::new(r, g, b)).to_string());
+            cfg_clone =
+                cfg_clone.replace(content, &text_rgba[0].color(RGB::new(r, g, b)).to_string());
         }
 
         *cfg = cfg_clone;
