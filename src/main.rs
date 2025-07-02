@@ -1,4 +1,5 @@
 #![feature(duration_millis_float)]
+#![feature(optimize_attribute)]
 
 use crate::utils::Utils;
 use std::{ffi::CString, time::Instant};
@@ -51,22 +52,25 @@ impl JustFetch {
         if self.is_arg_present("--raw") || !result.contains("$(") {
             println!("{result}");
         } else {
+            let cstr = CString::new(format!("echo \"{result}\""))
+                .expect("[ERROR] Failed creating CString out of result content!");
+            let cstr_ptr = cstr.into_raw();
+
             unsafe {
-                let cstr = CString::new(format!("echo \"{result}\""))
-                    .expect("[ERROR] Failed creating CString out of result content!");
-                let cstr_ptr = cstr.into_raw();
                 system(cstr_ptr);
                 drop(CString::from_raw(cstr_ptr));
             }
         }
 
-        if let Some(now) = now.take() {
-            println!(
-                "[JustFetch]: Took {}ms, {:.2?} in total",
-                now.elapsed().as_millis_f32(),
-                now.elapsed()
-            );
-        }
+        let Some(now) = now.take() else {
+            return;
+        };
+
+        let elapsed = now.elapsed();
+        println!(
+            "[JustFetch]: Took {}ms, {elapsed:.2?} in total",
+            elapsed.as_millis_f32()
+        );
     }
 
     /// Checks if the specified argument has been passed to the process.

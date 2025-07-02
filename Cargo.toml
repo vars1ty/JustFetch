@@ -11,6 +11,7 @@ edition = "2024"
 lxinfo = { git = "https://github.com/vars1ty/lxinfo.git" }
 regex-lite = "0.1.6"
 colorful = "0.3.2"
+lexical = "7.0.4"
 
 [profile.release]
 codegen-units = 1
